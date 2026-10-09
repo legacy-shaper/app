@@ -1,6 +1,10 @@
 /* Legacy Shaper — client app service worker.
    The app opens instantly and offline; collection data never passes through this cache (Supabase is always live). */
+<<<<<<< HEAD
 const VERSION = "ls-client-6394ceb2";
+=======
+const VERSION = "ls-client-a6575ce5";
+>>>>>>> 909da6e (Artwork sheet: « Dimensions de l’œuvre » + optional « Dimensions avec cadre » (paintings, works on paper, photographs), on the PDF sheet and in client collections (SQL 007))
 const APP = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./room-chair.webp", "./room-parquet.jpg"];
 const EXTERNAL = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
