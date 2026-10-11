@@ -553,6 +553,9 @@ async function loadCollections(){
   const {data,error}=await sb.from("collections").select("id,slug,name,subtitle,display_currency,cover_artwork_id").order("name");
   if(error) throw error;
   S.collections=data||[];
+  // Access withdrawn to a collection kept on this device: its offline copy (data, photos, documents) is erased at once.
+  const prevColls=await idb.get("colls:"+S.user.id)||[]; const nowIds=new Set(S.collections.map(c=>c.id));
+  if(prevColls.some(c=>c&&!nowIds.has(c.id))){ await idb.clear(); try{ localStorage.removeItem("ls-coll:"+S.user.id); if(!S.collections.length) localStorage.removeItem("ls-last-user"); }catch(e){} }
   await idb.set("colls:"+S.user.id,S.collections);
   let want=null; try{ want=localStorage.getItem("ls-coll:"+S.user.id); }catch(e){}
   const pick=S.collections.find(c=>c.id===want)||(S.collections.length===1?S.collections[0]:null);
@@ -573,6 +576,7 @@ const DOC_COLS="id,kind,name,mime,size,storage_path,artwork_id,expense_id,create
 async function fetchCollection(cid){
   const q=async p=>{ const {data,error}=await p; if(error) throw error; return data||[]; };
   const [coll]=await q(sb.from("collections").select("id,slug,name,subtitle,display_currency,cover_artwork_id").eq("id",cid));
+  if(!coll){ const e=new Error("access withdrawn"); e.revoked=true; throw e; }   // online, but this collection is no longer shared with this user
   // scale_view: the at-scale composition set by Legacy Shaper (SQL 005), crating: packing shared with the collector (SQL 006); older databases still load
   const wq=cols=>q(sb.from("artworks").select(cols).eq("collection_id",cid).order("artist"));
   const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed").catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
@@ -590,13 +594,17 @@ function accDevice(){ const u=navigator.userAgent||""; const k=/iPhone/.test(u)?
 function logAccess(action,obj){ try{ if(!sb||!S||!S.cid||navigator.onLine===false) return; const key=action+"|"+(obj||"")+"|"+S.cid;
   if(action!=="download"&&action!=="export"&&accSeen.has(key)) return; accSeen.add(key);
   const r=sb.rpc("log_access",{p_collection:S.cid,p_action:action,p_object:obj||null,p_device:accDevice()}); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
+// Access withdrawn by Legacy Shaper: everything kept on this device is erased, then the app starts again from the server.
+async function accessWithdrawn(){ const uid=S.user&&S.user.id; await idb.clear();
+  try{ if(uid) localStorage.removeItem("ls-coll:"+uid); localStorage.removeItem("ls-last-user"); localStorage.removeItem("ls-home"); }catch(e){}
+  S.cid=null; S.data=null; location.reload(); }
 async function openCollection(cid){
   S.cid=cid; try{ localStorage.setItem("ls-coll:"+S.user.id,cid); }catch(e){}
   const cached=await idb.get(`snap:${S.user.id}:${cid}`);
   if(cached){ S.data=cached.data; S.stamp=cached.at; S.online=false; showApp(); }
   try{ const data=await fetchCollection(cid); S.data=data; S.stamp=Date.now(); S.online=true;
     await idb.set(`snap:${S.user.id}:${cid}`,{at:S.stamp,data}); showApp(); prefetchPhotos(); chatProbe(); logAccess("session"); logAccess("open_collection");
-  }catch(e){ console.warn(e); if(!cached){ gateOffline(false); return; } S.online=false; renderStatus(); }
+  }catch(e){ if(e&&e.revoked){ await accessWithdrawn(); return; } console.warn(e); if(!cached){ gateOffline(false); return; } S.online=false; renderStatus(); }
 }
 async function refresh(silent){
   if(!S.cid||!S.user||navigator.onLine===false) return;
@@ -605,7 +613,7 @@ async function refresh(silent){
     if(changed){ render(); if(S.openId) openWork(S.openId,true); prefetchPhotos(); } else renderStatus();
     if(!silent) toast(t("live"));
     chatProbe();
-  }catch(e){ S.online=false; renderStatus(); }
+  }catch(e){ if(e&&e.revoked){ await accessWithdrawn(); return; } S.online=false; renderStatus(); }
 }
 async function viewPhoto(vid){
   if(S.viewPhotos[vid]) return S.viewPhotos[vid];
@@ -1740,5 +1748,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v850957c6</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vfe6fadda</div>
 </body></html>
