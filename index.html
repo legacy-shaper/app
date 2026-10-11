@@ -582,12 +582,20 @@ async function fetchCollection(cid){
   const docs=await q(sb.from("documents").select(DOC_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("created_at",{ascending:false}));
   return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs };
 }
+/* Access log (SQL 008: public.log_access → audit.access_log, append-only). The collector's own consultations are recorded
+   for the security of his collection: sign-in, opening, works viewed, documents downloaded, exports. Online only, never blocking. */
+const accSeen=new Set();
+function accDevice(){ const u=navigator.userAgent||""; const k=/iPhone/.test(u)?"iPhone":/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?"iPad":/Mac/.test(u)?"Mac":/Android/.test(u)?"Android":/Windows/.test(u)?"Windows":"Web";
+  let app=false; try{ app=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true; }catch(e){} return k+(app?" · app":" · web"); }
+function logAccess(action,obj){ try{ if(!sb||!S||!S.cid||navigator.onLine===false) return; const key=action+"|"+(obj||"")+"|"+S.cid;
+  if(action!=="download"&&action!=="export"&&accSeen.has(key)) return; accSeen.add(key);
+  const r=sb.rpc("log_access",{p_collection:S.cid,p_action:action,p_object:obj||null,p_device:accDevice()}); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
 async function openCollection(cid){
   S.cid=cid; try{ localStorage.setItem("ls-coll:"+S.user.id,cid); }catch(e){}
   const cached=await idb.get(`snap:${S.user.id}:${cid}`);
   if(cached){ S.data=cached.data; S.stamp=cached.at; S.online=false; showApp(); }
   try{ const data=await fetchCollection(cid); S.data=data; S.stamp=Date.now(); S.online=true;
-    await idb.set(`snap:${S.user.id}:${cid}`,{at:S.stamp,data}); showApp(); prefetchPhotos(); chatProbe();
+    await idb.set(`snap:${S.user.id}:${cid}`,{at:S.stamp,data}); showApp(); prefetchPhotos(); chatProbe(); logAccess("session"); logAccess("open_collection");
   }catch(e){ console.warn(e); if(!cached){ gateOffline(false); return; } S.online=false; renderStatus(); }
 }
 async function refresh(silent){
@@ -813,7 +821,7 @@ function cratingHtml(w,docs){ const c=w.crating; if(!c||typeof c!=="object") ret
     ${fact("crWhere",esc(tr("crW",c.where)))}${fact("crHandling",esc(tr("crH",c.handling)))}${fact("crOrient",esc(tr("crO",c.orientation)))}${fact("notes",esc(c.clientNote||""))}</dl>
     ${docs.length?`<div class="crdocs"><div class="crpkg">${esc(t("crPhotos"))}</div>${docs.map(docLine).join("")}</div>`:""}</div>`; }
 async function openWork(id,keep){
-  const w=workById(id); if(!w) return; S.openId=id;
+  const w=workById(id); if(!w) return; S.openId=id; logAccess("open_work",id);
   const views=((S.data.views)||[]).filter(v=>v.artwork_id===id).sort((a,b)=>(a.sort||0)-(b.sort||0)||String(a.created_at).localeCompare(String(b.created_at)));
   const exps=((S.data.expenses)||[]).filter(e=>e.artwork_id===id);
   const allDocs=((S.data.docs)||[]).filter(d=>d.artwork_id===id), crDocs=allDocs.filter(d=>d.kind==="crating"), docs=allDocs.filter(d=>d.kind!=="crating");
@@ -909,7 +917,7 @@ function sheetHTML(w,img,scaleImg){
     <div class="pf">${esc(S.data.coll.name)} · ${esc(t("sheetFoot"))} · ${esc(fmtDate(new Date().toISOString()))}</div>${scaleImg?`<div class="pscale"><img src="${scaleImg}" alt=""><div>${esc(w.artist)}${w.title?", "+esc(w.title):""}${w.year?", "+esc(w.year):""} · ${esc(t("atScale"))}</div></div>`:""}`;
 }
 async function downloadDoc(id){
-  const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return;
+  const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return; logAccess("download",id);
   let blob=await idb.get("doc:"+id);
   if(!blob){ try{ const {data,error}=await sb.storage.from(CFG.bucket).download(doc.storage_path); if(error) throw error; blob=data; idb.set("doc:"+id,blob); }catch(e){ toast(t("docErr")); return; } }
   const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=doc.name||"document"; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000);
@@ -1656,7 +1664,7 @@ async function imgData(p){ if(!p) return null; if(p.startsWith("data:")) return 
 function csvCell(v){ v=v==null?"":String(v); return /[";\n,]/.test(v)?`"${v.replace(/"/g,'""')}"`:v; }
 async function exportAll(){
   if(!window.JSZip){ toast(t("docErr")); return; }
-  toast(t("preparing"),4000);
+  toast(t("preparing"),4000); logAccess("export");
   const zip=new JSZip(); const head=["ref","artist","title","year","medium","dimensions","dimensions_framed","edition","ownership_share","co_owners","ownership_note","location","location_since","acquisition_date","acquisition_price","acquisition_currency","acquisition_source","insured_value","insured_currency","condition","provenance","exhibitions","literature","notes"];
   const lines=[head.join(",")];
   for(const w of works()){
@@ -1732,5 +1740,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vbbefde70</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v850957c6</div>
 </body></html>
