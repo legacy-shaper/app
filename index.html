@@ -568,7 +568,7 @@ function gateOffline(hasCopy){
 async function afterSignIn(){
   try{
     const {data:{user}}=await sb.auth.getUser(); if(!user){ gateEmail(); return; }
-    S.user={id:user.id,email:user.email};
+    S.user={id:user.id,email:user.email}; S.authed=true;
     const {data:aal}=await sb.auth.mfa.getAuthenticatorAssuranceLevel();
     if(aal && aal.nextLevel==="aal2" && aal.currentLevel!=="aal2"){
       const {data:f}=await sb.auth.mfa.listFactors(); const totp=(f&&f.totp||[]).find(x=>x.status==="verified");
@@ -650,14 +650,33 @@ async function fetchCollection(cid){
   const docs=await q(sb.from("documents").select(DOC_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("created_at",{ascending:false}));
   return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs };
 }
-/* Access log (SQL 008: public.log_access → audit.access_log, append-only). The collector's own consultations are recorded
-   for the security of his collection: sign-in, opening, works viewed, documents downloaded, exports. Online only, never blocking. */
-const accSeen=new Set();
+/* Connection journal (SQL 008 + 010: public.log_events → audit.access_log, append-only). Every opening of the app, sign-out,
+   collection opened, work viewed, document downloaded and export is recorded, ONLINE AND OFFLINE: each event is first written
+   to a queue on the device (localStorage "ls-accq", kept through sign-out) with its own time and an offline flag, then sent
+   as soon as the user has a session and a connection. Re-sent events are stored once (event id). Never blocking.
+   Sign-ins themselves are also recorded by the server (trigger on auth.sessions), whatever the app version. */
+const ACCQ="ls-accq", accSeen=new Set(); let accBusy=false;
 function accDevice(){ const u=navigator.userAgent||""; const k=/iPhone/.test(u)?"iPhone":/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?"iPad":/Mac/.test(u)?"Mac":/Android/.test(u)?"Android":/Windows/.test(u)?"Windows":"Web";
   let app=false; try{ app=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true; }catch(e){} return k+(app?" · app":" · web"); }
-function logAccess(action,obj){ try{ if(!sb||!S||!S.cid||navigator.onLine===false) return; const key=action+"|"+(obj||"")+"|"+S.cid;
-  if(action!=="download"&&action!=="export"&&accSeen.has(key)) return; accSeen.add(key);
-  const r=sb.rpc("log_access",{p_collection:S.cid,p_action:action,p_object:obj||null,p_device:accDevice()}); if(r&&r.catch) r.catch(()=>{}); }catch(e){} }
+function accQ(){ try{ const q=JSON.parse(localStorage.getItem(ACCQ)||"[]"); return Array.isArray(q)?q:[]; }catch(e){ return []; } }
+function accSave(q){ try{ localStorage.setItem(ACCQ,JSON.stringify(q.slice(-2000))); }catch(e){} }
+function accId(){ try{ if(crypto.randomUUID) return crypto.randomUUID(); }catch(e){} return Date.now().toString(36)+Math.random().toString(36).slice(2,12); }
+function logAccess(action,obj){ try{ const uid=S&&S.user&&S.user.id; if(!uid) return;
+  const key=action+"|"+(obj||"")+"|"+(S.cid||"");
+  if(action!=="download"&&action!=="export"&&action!=="sign_out"&&accSeen.has(key)) return; accSeen.add(key);
+  const q=accQ(); q.push({id:accId(),uid,app:"client",action,collection:S.cid||null,object:obj||null,at:new Date().toISOString(),
+    offline:navigator.onLine===false||!S.authed,device:accDevice()}); accSave(q);
+  accFlush(); }catch(e){} }
+async function accFlush(){
+  if(accBusy||!sb||!S||!S.authed||navigator.onLine===false) return;
+  const uid=S.user&&S.user.id; if(!uid) return;
+  const batch=accQ().filter(e=>e.uid===uid).slice(0,500); if(!batch.length) return;
+  accBusy=true;
+  let more=false;
+  try{ const {error}=await sb.rpc("log_events",{p_events:batch});
+    if(!error){ const sent=new Set(batch.map(e=>e.id)); const rest=accQ().filter(e=>!sent.has(e.id)); accSave(rest); more=rest.some(e=>e.uid===uid); } }
+  catch(e){} finally{ accBusy=false; }
+  if(more) return accFlush(); }  // events recorded while this batch was on its way
 // Access withdrawn by Legacy Shaper: everything kept on this device is erased, then the app starts again from the server.
 async function accessWithdrawn(){ const uid=S.user&&S.user.id; await idb.clear();
   try{ if(uid) localStorage.removeItem("ls-coll:"+uid); localStorage.removeItem("ls-last-user"); localStorage.removeItem("ls-home"); }catch(e){}
@@ -667,7 +686,7 @@ async function openCollection(cid){
   const cached=await idb.get(`snap:${S.user.id}:${cid}`);
   if(cached){ S.data=cached.data; S.stamp=cached.at; S.online=false; showApp(); }
   try{ const data=await fetchCollection(cid); S.data=data; S.stamp=Date.now(); S.online=true;
-    await idb.set(`snap:${S.user.id}:${cid}`,{at:S.stamp,data}); showApp(); prefetchPhotos(); chatProbe(); logAccess("session"); logAccess("open_collection");
+    await idb.set(`snap:${S.user.id}:${cid}`,{at:S.stamp,data}); showApp(); prefetchPhotos(); chatProbe(); logAccess("session"); logAccess("open_collection"); accFlush();
   }catch(e){ if(e&&e.revoked){ await accessWithdrawn(); return; } console.warn(e); if(!cached){ gateOffline(false); return; } S.online=false; renderStatus(); }
 }
 async function refresh(silent){
@@ -676,7 +695,7 @@ async function refresh(silent){
     S.data=data; S.stamp=Date.now(); S.online=true; await idb.set(`snap:${S.user.id}:${S.cid}`,{at:S.stamp,data});
     if(changed){ render(); if(S.openId) openWork(S.openId,true); prefetchPhotos(); } else renderStatus();
     if(!silent) toast(t("live"));
-    chatProbe();
+    chatProbe(); accFlush();
   }catch(e){ if(e&&e.revoked){ await accessWithdrawn(); return; } S.online=false; renderStatus(); }
 }
 async function viewPhoto(vid){
@@ -1679,7 +1698,7 @@ function chatLive(){
     .on("postgres_changes",{event:"INSERT",schema:"public",table:"support_messages",filter:`thread_id=eq.${C.thread.id}`},()=>chatLoad())
     .on("postgres_changes",{event:"UPDATE",schema:"public",table:"support_threads",filter:`id=eq.${C.thread.id}`},p=>{ if(p&&p.new){ Object.assign(C.thread,{mode:p.new.mode}); chatState(); } })
     .subscribe(); }catch(e){}
-  clearInterval(C.poll); C.poll=setInterval(()=>{ if(C.open&&document.visibilityState==="visible") chatLoad(); }, window.LS_CHAT_POLL_MS||8000);
+  clearInterval(C.poll); C.poll=setInterval(()=>{ if(C.open&&document.visibilityState==="visible"&&navigator.onLine!==false) chatLoad().catch(()=>{}); }, window.LS_CHAT_POLL_MS||8000);  // a lost connection never surfaces as an error
 }
 // Back to the app (another app was in front, the phone was locked): iOS has frozen the timers and closed the live
 // connection, so the conversation is read again at once and the live link re-opened — a reply never waits for a reopen.
@@ -1783,6 +1802,7 @@ function openMenu(){
 }
 $("#btnMenu").onclick=openMenu;
 async function signOut(){
+  logAccess("sign_out"); try{ await within(accFlush(),3000); }catch(e){}
   try{ localStorage.removeItem("ls-last-user"); localStorage.removeItem("ls-home"); if(S.user) localStorage.removeItem("ls-coll:"+S.user.id); }catch(e){}
   await idb.clear();
   try{ await sb.auth.signOut(); }catch(e){}
@@ -1796,21 +1816,21 @@ const within=(pr,ms)=>Promise.race([pr,new Promise((_,rej)=>setTimeout(()=>rej(n
 async function start(){
   // Offline first: the copy kept on this device opens at once, whatever the network does; it is refreshed when the connection allows.
   const copy=SHARED()?null:await lastCopy();
-  if(copy) openFromCache();
+  if(copy) await openFromCache();
   if(!window.supabase){ if(!copy) gateOffline(false); return; }
   sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,storage:authStore,storageKey:"ls-client-auth",detectSessionInUrl:false}});
-  window.addEventListener("online",()=>refresh(true));
+  window.addEventListener("online",()=>{ refresh(true); accFlush(); });
   document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="visible") refresh(true); });
   setInterval(()=>{ if(document.visibilityState==="visible") refresh(true); }, window.LS_POLL_MS||60000);
-  if(navigator.onLine===false){ if(!copy) gateOffline(false); return; }
+  if(navigator.onLine===false){ if(!copy) gateOffline(false); else { logAccess("session"); logAccess("open_collection"); } return; }
   let session=null, failed=false;
   try{ const {data,error}=await within(sb.auth.getSession(),8000); session=data&&data.session; if(error) failed=true; }catch(e){ failed=true; }
   if(session){ await afterSignIn(); return; }
-  if(failed){ if(!copy) gateOffline(false); return; }   // no network: keep the device copy on screen
+  if(failed){ if(!copy) gateOffline(false); else { logAccess("session"); logAccess("open_collection"); } return; }   // no network: keep the device copy on screen
   gateEmail();
 }
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vcae19c32</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vb9249368</div>
 </body></html>
