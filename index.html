@@ -50,6 +50,9 @@ img{display:block;max-width:100%}
 #gate input:focus{border-color:var(--gold)}
 #gate .btn{font-size:15px;font-weight:500;padding:13px;border-radius:10px;border:0;background:var(--gold);color:var(--deep)}
 #gate .btn[disabled]{opacity:.6}
+#gate .terms{text-align:left;max-height:46vh;overflow:auto;border:1px solid rgba(196,160,82,.35);border-radius:10px;padding:12px 14px;font-size:13px;line-height:1.5;color:#E8E2D3;-webkit-overflow-scrolling:touch}
+#gate .terms h2{font-size:13px;font-weight:600;margin:0 0 8px;color:#F4F0E6}
+#gate .terms ol{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:7px}
 #gate .ghost{background:transparent;color:var(--gold);border:1px solid rgba(196,160,82,.5);padding:11px;border-radius:10px;font-size:14px}
 #gate .link{background:none;border:0;color:#CDBF9D;font-size:13px;text-decoration:underline;text-underline-offset:3px}
 #gate .msg{min-height:20px;font-size:13px;color:#E9C9A0}
@@ -377,6 +380,20 @@ const I18N={
    noDocs:"No documents shared yet.",download:"Download",
    cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",other:"Other services"},
    menu:"Menu",signedAs:"Signed in as",refresh:"Refresh now",exportAll:"Download my collection",exportSub:"Inventory spreadsheet and images, in one file",
+   termsTitle:"Terms of use",termsIntro:"Before opening the collection, please read the terms for Authorised Users of The Legacy.",termsAccept:"I accept",termsMsg:"Your acceptance could not be recorded. Please check the connection and try again.",
+   termsHead:"The Legacy — Terms for Authorised Users — version 1.0",
+   termsItems:["Your access. The Legacy is a collection-management software of Legacy Shaper Collection – FZCO, Dubai (“Legacy Shaper”). You have been invited by the Customer who has subscribed to it. Your access is personal: it is reserved to you and only to consult or manage the collections the Customer has opened to you.",
+    "Keeping your access safe. Please keep your device locked with a code or biometrics, keep your sign-in codes to yourself, and let the Customer or office@legacy-shaper.com know straight away if you think someone else may have used your access.",
+    "Discretion. What you see in The Legacy (objects, images, values, locations, documents, names) is confidential. Please keep it private, use it only for the purposes for which the Customer has given you access, and continue to do so after your access ends.",
+    "Software. The Legacy and its content other than the Customer’s data belong to Legacy Shaper. Please keep it as it is: copying, adapting, decompiling or extracting it by automated means is reserved to Legacy Shaper.",
+    "Values. Values displayed are indicative only; they are not an appraisal or investment, tax or legal advice.",
+    "Your data. The collection data belongs to the Customer, who decides how it is used; Legacy Shaper hosts it on the Customer’s behalf, never sells it and never uses it for marketing. Legacy Shaper uses your sign-in details and usage information to operate and secure the service, and may create anonymous statistics that never identify you, the Customer or any object. The privacy notice is available on request at office@legacy-shaper.com.",
+    "Access log. For everyone’s security, sign-ins and consultations are recorded in an access log, which the Customer may consult.",
+    "Offline copy. The application may keep a copy on your device, protected by its lock, for consultation without a network. It is erased when you sign out and, if your access is withdrawn, at the next opening with a network connection.",
+    "End of access. The Customer may withdraw your access at any time. Legacy Shaper may pause it temporarily to preserve security.",
+    "Updates. These terms may change; you will be asked to accept the new version at your next sign-in.",
+    "Acceptance. By selecting “I accept”, you agree to these terms. Your acceptance is recorded with the version of these terms and the date and time.",
+    "Law. These terms are governed by the laws of the Emirate of Dubai and the applicable federal laws of the United Arab Emirates. Questions: office@legacy-shaper.com."],
    install:"Install on this device",installSub:"Open Legacy Shaper like an app, also without connection",lang:"Français",signOut:"Sign out",
    switchColl:"Change collection",preparing:"Preparing the file…",ready:"Your file is ready.",docErr:"This document will be available once the connection is back.",
    installTitle:"Legacy Shaper on your Home Screen",
@@ -419,6 +436,20 @@ const I18N={
    noDocs:"Aucun document partagé pour le moment.",download:"Télécharger",
    cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",other:"Autres prestations"},
    menu:"Menu",signedAs:"Connecté en tant que",refresh:"Mettre à jour",exportAll:"Télécharger ma collection",exportSub:"Inventaire au format tableur et images, en un seul fichier",
+   termsTitle:"Conditions d’utilisation",termsIntro:"Avant d’ouvrir la collection, merci de prendre connaissance des conditions applicables aux utilisateurs de The Legacy.",termsAccept:"J’accepte",termsMsg:"Votre acceptation n’a pas pu être enregistrée. Merci de vérifier la connexion et de réessayer.",
+   termsHead:"The Legacy — Conditions applicables aux Utilisateurs Autorisés — version 1.0",
+   termsItems:["Votre accès. The Legacy est un logiciel de gestion de collections de Legacy Shaper Collection – FZCO, Dubaï (« Legacy Shaper »). Vous y avez été invité par le Client qui y a souscrit. Votre accès est personnel : il vous est réservé et sert à consulter ou gérer les collections que le Client vous a ouvertes.",
+    "Préserver votre accès. Veuillez garder votre appareil verrouillé par un code ou par la biométrie, garder vos codes de connexion pour vous, et prévenir sans attendre le Client ou office@legacy-shaper.com si vous pensez qu’une autre personne a pu utiliser votre accès.",
+    "Discrétion. Ce que vous voyez dans The Legacy (objets, images, valeurs, lieux, documents, noms) est confidentiel. Merci de le garder privé, de l’utiliser uniquement aux fins pour lesquelles le Client vous a donné accès, et de continuer à le faire après la fin de votre accès.",
+    "Logiciel. The Legacy et son contenu, à l’exception des données du Client, appartiennent à Legacy Shaper. Merci de le conserver tel quel : la copie, l’adaptation, la décompilation ou l’extraction par des moyens automatisés sont réservées à Legacy Shaper.",
+    "Valeurs. Les valeurs affichées sont indicatives ; elles ne constituent ni une expertise ni un conseil en investissement, fiscal ou juridique.",
+    "Vos données. Les données de la collection appartiennent au Client, qui décide de leur utilisation ; Legacy Shaper les héberge pour son compte, ne les vend jamais et ne les utilise jamais à des fins de marketing. Legacy Shaper utilise vos informations de connexion et d’utilisation pour faire fonctionner et sécuriser le service, et peut établir des statistiques anonymes qui ne vous identifient jamais, ni le Client, ni aucun objet. La politique de confidentialité est disponible sur demande à office@legacy-shaper.com.",
+    "Journal des accès. Pour la sécurité de tous, les connexions et consultations sont enregistrées dans un journal des accès, que le Client peut consulter.",
+    "Copie hors ligne. L’application peut conserver sur votre appareil une copie, protégée par son verrouillage, pour une consultation sans réseau. Elle est effacée lorsque vous vous déconnectez et, si votre accès est retiré, à la prochaine ouverture avec une connexion réseau.",
+    "Fin de l’accès. Le Client peut retirer votre accès à tout moment. Legacy Shaper peut le mettre temporairement en pause pour préserver la sécurité.",
+    "Mises à jour. Ces conditions peuvent évoluer ; il vous sera demandé d’accepter la nouvelle version lors de votre connexion suivante.",
+    "Acceptation. En sélectionnant « J’accepte », vous acceptez ces conditions. Votre acceptation est enregistrée avec la version de ces conditions ainsi que la date et l’heure.",
+    "Droit applicable. Ces conditions sont régies par les lois de l’Émirat de Dubaï et les lois fédérales applicables des Émirats arabes unis. Questions : office@legacy-shaper.com."],
    install:"Installer sur cet appareil",installSub:"Ouvrir Legacy Shaper comme une application, même sans connexion",lang:"English",signOut:"Se déconnecter",
    switchColl:"Changer de collection",preparing:"Préparation du fichier…",ready:"Votre fichier est prêt.",docErr:"Ce document sera disponible dès le retour de la connexion.",
    installTitle:"Legacy Shaper sur votre écran d’accueil",
@@ -557,9 +588,42 @@ async function loadCollections(){
   const prevColls=await idb.get("colls:"+S.user.id)||[]; const nowIds=new Set(S.collections.map(c=>c.id));
   if(prevColls.some(c=>c&&!nowIds.has(c.id))){ await idb.clear(); try{ localStorage.removeItem("ls-coll:"+S.user.id); if(!S.collections.length) localStorage.removeItem("ls-last-user"); }catch(e){} }
   await idb.set("colls:"+S.user.id,S.collections);
+  if(!S.isAdmin && S.collections.length && !(await termsAccepted())){ gateTerms(); return; }
+  await enterCollections();
+}
+async function enterCollections(){
   let want=null; try{ want=localStorage.getItem("ls-coll:"+S.user.id); }catch(e){}
   const pick=S.collections.find(c=>c.id===want)||(S.collections.length===1?S.collections[0]:null);
   if(pick) await openCollection(pick.id); else if(S.collections.length) showPicker(); else { gate.hidden=false; gateShell(`<div class="rule"></div><h1>${esc(t("access"))}</h1><p>${esc(t("unknown"))}</p><button class="ghost" id="gOut">${esc(t("signOut"))}</button>`); $("#gOut").onclick=signOut; }
+}
+/* End-User Terms (Subscription Agreement art. 3.2, Schedule 5; SQL 009): each Authorised User accepts the current version once,
+   at first sign-in and again for each new version. Recorded server-side with version, date and time (audit.terms_acceptance).
+   Never blocks the collector when the database has no 009 yet or the device is offline. */
+const TERMS_V="1.0";
+async function termsAccepted(){
+  if(authStore.getItem("ls-terms:"+S.user.id)===TERMS_V) return true;
+  if(navigator.onLine===false) return true;
+  try{ const {data,error}=await sb.rpc("terms_status",{p_version:TERMS_V});
+    if(error) return true;              // 009 not applied yet: nothing to record against
+    if(data===true){ authStore.setItem("ls-terms:"+S.user.id,TERMS_V); return true; }
+    return false;
+  }catch(e){ return true; }
+}
+function gateTerms(msg){
+  gate._redraw=()=>gateTerms(msg);
+  const items=t("termsItems");
+  gateShell(`<div class="rule"></div><h1>${esc(t("termsTitle"))}</h1><p>${esc(t("termsIntro"))}</p>
+    <div class="terms" id="gTerms" tabindex="0"><h2>${esc(t("termsHead"))}</h2><ol>${(Array.isArray(items)?items:[]).map(x=>`<li>${esc(x)}</li>`).join("")}</ol></div>
+    <div class="msg" id="gMsg">${esc(msg||"")}</div>
+    <button class="btn" id="gAccept">${esc(t("termsAccept"))}</button>
+    <button class="link" id="gOut">${esc(t("signOut"))}</button>`);
+  $("#gOut").onclick=signOut;
+  $("#gAccept").onclick=async e=>{ const b=e.currentTarget; if(b.disabled) return; b.disabled=true;
+    try{ const {error}=await sb.rpc("accept_terms",{p_version:TERMS_V,p_device:accDevice()});
+      if(error){ b.disabled=false; $("#gMsg").textContent=t("termsMsg"); return; }
+    }catch(x){ b.disabled=false; $("#gMsg").textContent=t("termsMsg"); return; }
+    authStore.setItem("ls-terms:"+S.user.id,TERMS_V);
+    haptic(); gate._redraw=null; await enterCollections(); };
 }
 function showPicker(){
   gate._redraw=showPicker;
@@ -1748,5 +1812,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vfe6fadda</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vcae19c32</div>
 </body></html>
