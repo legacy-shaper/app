@@ -363,7 +363,7 @@ const I18N={
    sending:"Sending…",codeTitle:"Your code",codeIntro:"An access code has been sent to",verify:"Open my collection",verifying:"Opening…",resend:"Send a new code",other:"Use another address",
    shared:"Computer shared with others: keep nothing on this device after I sign out.",codeSent:"A new code is on its way.",badCode:"This code does not match. Please check the latest email and try again.",
    unknown:"We could not send a code to this address. Please use the address registered with Legacy Shaper, or write to office@legacy-shaper.com.",wait:"Please wait a moment before requesting a new code.",
-   neterr:"The connection is not available at the moment. Please try again shortly.",mfaTitle:"Security code",mfaIntro:"Enter the six-digit code from your authenticator app.",
+   neterr:"The connection is not available at the moment. Please try again shortly.",mfaTitle:"Security code",mfaStep:"Step 2 of 2 · email code confirmed ✓",mfaIntro:"Open your authenticator app (Google Authenticator, Authy…) and enter the six-digit code shown for Legacy Shaper. It is not the code received by email, which is already confirmed.",mfaMail:"This eight-digit code is the one from the email: it is already confirmed. Here, enter the six-digit code from your authenticator app.",mfaBad:"This code does not match. Enter the current code from your authenticator app (it changes every 30 seconds).",
    offlineTitle:"Legacy Shaper",offlineIntro:"Your collection is available on this device. The connection will refresh it as soon as possible.",openOffline:"Open my collection",retry:"Try again",
    overview:"Overview",works:"Works",locations:"Locations",expenses:"Expenses",documents:"Documents",
    tabShort:{overview:"Home",works:"Works",locations:"Places",expenses:"Expenses",documents:"Documents"},
@@ -419,7 +419,7 @@ const I18N={
    sending:"Envoi…",codeTitle:"Votre code",codeIntro:"Un code d’accès a été envoyé à",verify:"Ouvrir ma collection",verifying:"Ouverture…",resend:"Recevoir un nouveau code",other:"Utiliser une autre adresse",
    shared:"Ordinateur partagé : ne rien conserver sur cet appareil après ma déconnexion.",codeSent:"Un nouveau code vous a été envoyé.",badCode:"Ce code ne correspond pas. Vérifiez le dernier e-mail reçu et réessayez.",
    unknown:"Nous n’avons pas pu envoyer de code à cette adresse. Utilisez l’adresse enregistrée chez Legacy Shaper, ou écrivez à office@legacy-shaper.com.",wait:"Patientez un instant avant de demander un nouveau code.",
-   neterr:"La connexion n’est pas disponible pour le moment. Réessayez dans quelques instants.",mfaTitle:"Code de sécurité",mfaIntro:"Saisissez le code à six chiffres de votre application d’authentification.",
+   neterr:"La connexion n’est pas disponible pour le moment. Réessayez dans quelques instants.",mfaTitle:"Code de sécurité",mfaStep:"Étape 2 sur 2 · code e-mail validé ✓",mfaIntro:"Ouvrez votre application d’authentification (Google Authenticator, Authy…) et saisissez le code à six chiffres affiché pour Legacy Shaper. Ce n’est pas le code reçu par e-mail, déjà validé.",mfaMail:"Ce code à huit chiffres est celui de l’e-mail : il est déjà validé. Ici, saisissez le code à six chiffres de votre application d’authentification.",mfaBad:"Ce code ne correspond pas. Saisissez le code actuel de votre application d’authentification (il change toutes les 30 secondes).",
    offlineTitle:"Legacy Shaper",offlineIntro:"Votre collection est disponible sur cet appareil. Elle se mettra à jour dès que la connexion reviendra.",openOffline:"Ouvrir ma collection",retry:"Réessayer",
    overview:"Vue d’ensemble",works:"Œuvres",locations:"Localisations",expenses:"Dépenses",documents:"Documents",
    tabShort:{overview:"Accueil",works:"Œuvres",locations:"Lieux",expenses:"Dépenses",documents:"Documents"},
@@ -559,13 +559,18 @@ function gateCode(email,msg){
 }
 function gateMfa(factorId,msg){
   gate._redraw=()=>gateMfa(factorId,msg);
-  gateShell(`<div class="rule"></div><h1>${esc(t("mfaTitle"))}</h1><p>${esc(t("mfaIntro"))}</p>
-    <form id="gForm" style="display:flex;flex-direction:column;gap:12px;margin-top:6px"><input class="code" id="gCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="······" required>
+  /* Admin only (clients have no authenticator). Safari offers the email code from Mail in any "one-time-code" field: here that
+     8-digit code was being cut to 6 digits (Dylan, 12 Oct 2026). So: no autofill, a clear step 2, and the email code is recognised. */
+  gateShell(`<div class="rule"></div><div class="tag" id="gStep" style="font-size:14px;margin:0">${esc(t("mfaStep"))}</div><h1>${esc(t("mfaTitle"))}</h1><p>${esc(t("mfaIntro"))}</p>
+    <form id="gForm" style="display:flex;flex-direction:column;gap:12px;margin-top:6px"><input class="code" id="gCode" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="······" required>
     <div class="msg" id="gMsg">${esc(msg||"")}</div><button class="btn" type="submit">${esc(t("verify"))}</button><button class="link" type="button" id="gOut">${esc(t("other"))}</button></form>`);
-  const inp=$("#gCode"); inp.focus(); inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,"").slice(0,6); };
+  const inp=$("#gCode"); inp.focus();
+  inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,"").slice(0,8);
+    $("#gMsg").textContent=inp.value.length>6?t("mfaMail"):""; };
   $("#gOut").onclick=()=>signOut();
-  $("#gForm").onsubmit=async e=>{ e.preventDefault(); const {error}=await sb.auth.mfa.challengeAndVerify({factorId, code:inp.value});
-    if(error){ $("#gMsg").textContent=t("badCode"); return; } afterSignIn(); };
+  $("#gForm").onsubmit=async e=>{ e.preventDefault(); if(inp.value.length!==6){ $("#gMsg").textContent=t("mfaIntro"); return; }
+    const {error}=await sb.auth.mfa.challengeAndVerify({factorId, code:inp.value});
+    if(error){ $("#gMsg").textContent=t("mfaBad"); inp.select(); return; } afterSignIn(); };
 }
 function gateOffline(hasCopy){
   gate._redraw=()=>gateOffline(hasCopy);
@@ -1848,5 +1853,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vfb8e6f3c</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v4455a79b</div>
 </body></html>
