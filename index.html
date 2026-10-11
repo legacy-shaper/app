@@ -94,6 +94,11 @@ img{display:block;max-width:100%}
   body #selBar{bottom:calc(80px + var(--safe-b))}
   body .toast{bottom:calc(88px + var(--safe-b))}
 }
+.pvbar{max-width:1144px;margin:10px auto 0;padding:7px 12px;border:1px solid var(--gold);border-radius:8px;font-size:12.5px;line-height:1.4;color:var(--deep);background:rgba(196,160,82,.08);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pvbar[hidden]{display:none}
+.pvbar b{font-weight:600}
+.pvbar button{border:1px solid var(--gold);background:transparent;color:inherit;border-radius:6px;padding:4px 10px;font:inherit;cursor:pointer}
+@media (max-width:720px){.pvbar{margin:8px 12px 0}}
 .status{max-width:1180px;margin:0 auto;padding:10px 18px 0;font-size:12px;color:var(--muted);display:flex;gap:8px;align-items:center}
 .status i{width:7px;height:7px;border-radius:50%;background:#7FA88A;display:inline-block}
 .status.off i{background:var(--gold)}
@@ -332,6 +337,7 @@ body.selecting #main{padding-bottom:110px}
     </div>
     <nav class="tabs" id="tabs"></nav>
   </header>
+  <div class="pvbar" id="pvBar" hidden></div>
   <div class="status" id="status"><i></i><span></span></div>
   <main id="main"></main>
   <nav class="btabs" id="btabs" aria-label="Menu"></nav>
@@ -395,7 +401,7 @@ const I18N={
     "Acceptance. By selecting “I accept”, you agree to these terms. Your acceptance is recorded with the version of these terms and the date and time.",
     "Law. These terms are governed by the laws of the Emirate of Dubai and the applicable federal laws of the United Arab Emirates. Questions: office@legacy-shaper.com."],
    install:"Install on this device",installSub:"Open Legacy Shaper like an app, also without connection",lang:"Français",signOut:"Sign out",
-   switchColl:"Change collection",preparing:"Preparing the file…",ready:"Your file is ready.",docErr:"This document will be available once the connection is back.",
+   switchColl:"Change collection",pvLead:"Preview — you see the app as the collector of",pvRO:"read-only",preparing:"Preparing the file…",ready:"Your file is ready.",docErr:"This document will be available once the connection is back.",
    installTitle:"Legacy Shaper on your Home Screen",
    installIOS:"In Safari, tap the Share button, then “Add to Home Screen”. Legacy Shaper then opens like an app, including without connection.",
    installMac:"In Safari, choose File › Add to Dock. In Chrome, use the install icon at the end of the address bar.",
@@ -451,7 +457,7 @@ const I18N={
     "Acceptation. En sélectionnant « J’accepte », vous acceptez ces conditions. Votre acceptation est enregistrée avec la version de ces conditions ainsi que la date et l’heure.",
     "Droit applicable. Ces conditions sont régies par les lois de l’Émirat de Dubaï et les lois fédérales applicables des Émirats arabes unis. Questions : office@legacy-shaper.com."],
    install:"Installer sur cet appareil",installSub:"Ouvrir Legacy Shaper comme une application, même sans connexion",lang:"English",signOut:"Se déconnecter",
-   switchColl:"Changer de collection",preparing:"Préparation du fichier…",ready:"Votre fichier est prêt.",docErr:"Ce document sera disponible dès le retour de la connexion.",
+   switchColl:"Changer de collection",pvLead:"Aperçu — vous voyez l’app comme le collectionneur de",pvRO:"lecture seule",preparing:"Préparation du fichier…",ready:"Votre fichier est prêt.",docErr:"Ce document sera disponible dès le retour de la connexion.",
    installTitle:"Legacy Shaper sur votre écran d’accueil",
    installIOS:"Dans Safari, touchez le bouton Partager, puis « Sur l’écran d’accueil ». Legacy Shaper s’ouvre alors comme une application, même sans connexion.",
    installMac:"Dans Safari, choisissez Fichier › Ajouter au Dock. Dans Chrome, utilisez l’icône d’installation au bout de la barre d’adresse.",
@@ -497,6 +503,11 @@ const authStore={ getItem:k=>{ try{ return (SHARED()?sessionStorage:localStorage
   removeItem:k=>{ try{ localStorage.removeItem(k); sessionStorage.removeItem(k); }catch(e){} } };
 
 /* ---------------- state ---------------- */
+/* « Aperçu client » (Dylan, 11 Oct 2026): The Legacy opens app.legacy-shaper.com/?apercu=<collection id>. For the admin
+   account only, that collection opens directly, read-only, under a banner. Clients ignore it (they only ever read their own). */
+const PREVIEW=(()=>{ let id=null; try{ const u=new URL(location.href); id=u.searchParams.get("apercu");
+  if(id){ sessionStorage.setItem("ls-apercu",id); u.searchParams.delete("apercu"); history.replaceState(null,"",u.pathname+u.search+u.hash); }
+  else id=sessionStorage.getItem("ls-apercu"); }catch(e){} return id&&/^[0-9a-f-]{36}$/i.test(id)?id:null; })();
 const S={ user:null, isAdmin:false, collections:[], cid:null, data:null, tab:"overview", q:"", loc:"", year:"", online:false, stamp:0, viewPhotos:{} };
 let sb=null;
 
@@ -580,7 +591,7 @@ async function afterSignIn(){
 }
 async function loadCollections(){
   const {data:prof}=await sb.from("profiles").select("role").eq("id",S.user.id).maybeSingle();
-  S.isAdmin=!!(prof&&prof.role==="admin");
+  S.isAdmin=!!(prof&&prof.role==="admin"); try{ localStorage.setItem("ls-admin:"+S.user.id,S.isAdmin?"1":""); }catch(e){}
   const {data,error}=await sb.from("collections").select("id,slug,name,subtitle,display_currency,cover_artwork_id").order("name");
   if(error) throw error;
   S.collections=data||[];
@@ -593,6 +604,7 @@ async function loadCollections(){
 }
 async function enterCollections(){
   let want=null; try{ want=localStorage.getItem("ls-coll:"+S.user.id); }catch(e){}
+  if(PREVIEW){ try{ sessionStorage.removeItem("ls-apercu"); }catch(e){} if(S.isAdmin&&S.collections.some(c=>c.id===PREVIEW)) want=PREVIEW; }
   const pick=S.collections.find(c=>c.id===want)||(S.collections.length===1?S.collections[0]:null);
   if(pick) await openCollection(pick.id); else if(S.collections.length) showPicker(); else { gate.hidden=false; gateShell(`<div class="rule"></div><h1>${esc(t("access"))}</h1><p>${esc(t("unknown"))}</p><button class="ghost" id="gOut">${esc(t("signOut"))}</button>`); $("#gOut").onclick=signOut; }
 }
@@ -721,7 +733,7 @@ async function lastCopy(){ let uid=null; try{ uid=localStorage.getItem("ls-last-
   let cid=null; try{ cid=localStorage.getItem("ls-coll:"+uid); }catch(e){} const colls=await idb.get("colls:"+uid)||[];
   cid=cid||(colls[0]&&colls[0].id); if(!cid) return null; const snap=await idb.get(`snap:${uid}:${cid}`); return snap?{uid,cid,colls,snap}:null; }
 async function openFromCache(){ const c=await lastCopy(); if(!c){ gateOffline(false); return; }
-  S.user=S.user||{id:c.uid,email:""}; S.collections=c.colls; S.cid=c.cid; S.data=c.snap.data; S.stamp=c.snap.at; S.online=false; showApp(); }
+  S.user=S.user||{id:c.uid,email:""}; try{ S.isAdmin=S.isAdmin||localStorage.getItem("ls-admin:"+c.uid)==="1"; }catch(e){} S.collections=c.colls; S.cid=c.cid; S.data=c.snap.data; S.stamp=c.snap.at; S.online=false; showApp(); }
 
 /* ---------------- shell ---------------- */
 const TABS=["overview","works","locations","expenses","documents"];
@@ -761,6 +773,7 @@ function render(){
   brandCollection(d.coll);
   $("#collName").textContent=d.coll.name||"";
   $("#collSub").textContent=d.coll.subtitle||"Collection Office";
+  renderPreview();
   $("#tabs").innerHTML=TABS.map(k=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${esc(t(k))}</button>`).join("");
   $("#btabs").innerHTML=TABS.map(k=>`<button data-bt="${k}" class="${S.tab===k?"on":""}" ${S.tab===k?'aria-current="page"':""}>${TAB_ICON[k]}<span>${esc(t("tabShort")[k])}</span></button>`).join("");
   document.querySelectorAll("#tabs button,#btabs button").forEach(b=>b.onclick=()=>{ S.tab=b.dataset.t||b.dataset.bt; S.sel=null; window.scrollTo(0,0); render(); });
@@ -773,6 +786,9 @@ function render(){
   else m.innerHTML=viewDocs();
   bindMain();
 }
+function renderPreview(){ const pv=$("#pvBar"); if(!pv) return; pv.hidden=!S.isAdmin; if(!S.isAdmin){ pv.innerHTML=""; return; }
+  pv.innerHTML=`<span>${esc(t("pvLead"))} <b>${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</b> · ${esc(t("pvRO"))}</span>${S.collections.length>1?`<button type="button" id="pvSwitch">${esc(t("switchColl"))}</button>`:""}`;
+  const b=$("#pvSwitch"); if(b) b.onclick=()=>{ try{ localStorage.removeItem("ls-coll:"+S.user.id); }catch(e){} showPicker(); }; }
 function renderStatus(){ const s=$("#status"); if(!s) return; s.classList.toggle("off",!S.online);
   s.querySelector("span").textContent=S.online?`${t("live")} · ${fmtStamp(S.stamp)}`:`${t("offline")} ${fmtStamp(S.stamp)}`; }
 const works=()=>(S.data&&S.data.works)||[];
@@ -1832,5 +1848,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vb9249368</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vfb8e6f3c</div>
 </body></html>
