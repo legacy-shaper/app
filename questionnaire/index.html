@@ -95,7 +95,7 @@ const T = {
 fr: {
   kick: "Collection Office", title: "Préparer votre proposition",
   lead: "Ordre, rigueur, indépendance : chaque proposition du Collection Office commence par une juste lecture de la collection. Ces quelques questions en dessinent les grandes lignes, sans porter sur aucune œuvre ni aucun document.",
-  how: "Quelques minutes suffisent. Vos réponses nous parviennent directement et restent strictement confidentielles. « Je ne sais pas » est une réponse tout à fait juste.",
+  how: "À compléter directement sur votre écran : vos réponses nous parviennent dès l’envoi. Ce questionnaire reste strictement confidentiel.",
   loading: "Ouverture du questionnaire…", conf: "Strictement confidentiel",
   s1: "I · Votre collection en chiffres", s2: "II · Ce qui est déjà réuni", s2lead: "Pour chaque élément, la réponse qui décrit le mieux l’ensemble de votre collection.", s3: "Vos coordonnées",
   works: "Nombre approximatif d’œuvres", worksO: ["Moins de 50", "50 à 100", "100 à 250", "Plus de 250"], worksExact: "Nombre exact, si vous le connaissez",
@@ -115,7 +115,8 @@ fr: {
   remind: "Quelques lignes restent sans réponse :", remindEnd: "Vous pouvez les compléter, ou envoyer vos réponses telles quelles.", complete: "Compléter", sendAnyway: "Envoyer tel quel",
   needName: "Merci d’indiquer votre prénom et votre nom avant l’envoi.",
   sendFail: "L’envoi n’a pas pu aboutir. Vos réponses sont conservées sur cet appareil : vérifiez la connexion, puis appuyez de nouveau sur « Envoyer mes réponses ».",
-  thanks1: "Avec nos remerciements.", thanks2: "Vos réponses nous sont bien parvenues. Elles nous permettront de mesurer avec justesse le travail que votre collection appelle ; notre proposition vous sera adressée dans les prochains jours.",
+  closing: "Avec nos remerciements. Vos réponses nous permettront de mesurer avec justesse le travail que votre collection appelle.",
+  thanks1: "Vos réponses nous sont bien parvenues.", thanks2: "Avec nos remerciements. Elles nous permettront de mesurer avec justesse le travail que votre collection appelle.",
   already: "Vos réponses nous sont déjà parvenues. Avec nos remerciements.",
   invalid: "Ce lien n’est plus actif. Pour recevoir un nouveau lien, écrivez-nous à office@legacy-shaper.com.",
   offline: "Le questionnaire s’ouvre avec une connexion internet. Merci de réessayer dans un instant.",
@@ -123,8 +124,8 @@ fr: {
 },
 en: {
   kick: "Collection Office", title: "Preparing your proposal",
-  lead: "Order, rigour, independence: every Collection Office proposal begins with an accurate reading of the collection. These few questions outline it, without touching on any work or any document.",
-  how: "A few minutes are enough. Your answers reach us directly and remain strictly confidential. “I don’t know” is a perfectly good answer.",
+  lead: "Order, rigour, independence: every Collection Office proposal begins with a precise reading of the collection. These few questions sketch its broad lines, without touching on any particular work or document.",
+  how: "To be completed directly on screen: your answers reach us as soon as they are sent. This questionnaire remains strictly confidential.",
   loading: "Opening the questionnaire…", conf: "Strictly confidential",
   s1: "I · Your collection in figures", s2: "II · What is already in place", s2lead: "For each element, the answer that best describes your collection as a whole.", s3: "Your details",
   works: "Approximate number of works", worksO: ["Fewer than 50", "50 to 100", "100 to 250", "More than 250"], worksExact: "Exact number, if you know it",
@@ -144,7 +145,8 @@ en: {
   remind: "A few lines are still unanswered:", remindEnd: "You may complete them, or send your answers as they are.", complete: "Complete", sendAnyway: "Send as they are",
   needName: "Please add your first and last name before sending.",
   sendFail: "Your answers could not be sent just now. They are kept on this device: please check the connection, then tap “Send my answers” again.",
-  thanks1: "With our thanks.", thanks2: "Your answers have reached us. They will allow us to measure accurately the work your collection calls for; our proposal will follow within the next few days.",
+  closing: "With our thanks. Your answers will allow us to measure, with precision, the work your collection calls for.",
+  thanks1: "Your answers have reached us.", thanks2: "With our thanks. They will allow us to measure, with precision, the work your collection calls for.",
   already: "Your answers have already reached us. With our thanks.",
   invalid: "This link is no longer active. To receive a new link, please write to office@legacy-shaper.com.",
   offline: "The questionnaire opens with an internet connection. Please try again in a moment.",
@@ -206,6 +208,7 @@ function render() {
     <div class="q"><div class="row3">${txt("firstName", t.firstName)}${txt("lastName", t.lastName)}<div><label class="f" for="date">${esc(t.date)}</label><input class="t" id="date" data-tf="date" value="${esc(A.date || "")}"></div></div>
       <div class="row2 sub2">${txt("company", t.company, true)}${txt("collection", t.collection, true)}</div></div>
   </section>
+  <p class="lead" style="text-align:center;margin:26px auto 0">${esc(t.closing)}</p>
   <div id="remind" class="remind" role="status"></div>
   <div class="send"><button type="submit" class="btn" id="sendBtn">${esc(t.send)}</button></div>
   <p class="note" id="msg">${esc(t.saved)}</p>`;
