@@ -1,0 +1,41 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>Signatures · Legacy Shaper</title>
+<style>
+body{margin:0;background:#F4F0E6;color:#16241A;font:400 15px/1.55 -apple-system,Helvetica,Arial,sans-serif}
+.w{max-width:720px;margin:0 auto;padding:28px 16px 48px}
+h1{font:500 30px/1.15 Georgia,serif;color:#244A30;margin:0 0 6px}
+.k{font:600 11px/1 sans-serif;letter-spacing:3px;text-transform:uppercase;color:#7A6332;margin-bottom:10px}
+.card{background:#fff;border:1px solid #E3DCCB;border-radius:14px;padding:20px;margin:18px 0}
+.card h2{font:600 13px/1 sans-serif;letter-spacing:2px;text-transform:uppercase;color:#7A6332;margin:0 0 16px}
+.sig{padding:16px;border:1px dashed #E3DCCB;border-radius:10px;margin-bottom:14px;overflow-x:auto}
+button{appearance:none;border:0;border-radius:999px;background:#244A30;color:#F4F0E6;font:600 15px sans-serif;padding:13px 22px;min-height:46px;cursor:pointer}
+.ok{color:#244A30;font-weight:600;margin-left:10px}
+ol{padding-left:20px} li{margin:6px 0} b{font-weight:600}
+</style></head><body><div class="w">
+<div class="k">Legacy Shaper</div><h1>Signatures email</h1>
+<p>Appuyez sur « Copier », puis collez (⌘V, ou Coller sur l’iPhone) dans le réglage indiqué plus bas.</p>
+<div class="card"><h2>dylan@legacy-shaper.com</h2><div class="sig" id="s1"><table cellpadding="0" cellspacing="0" border="0" style="font-family:Helvetica,Arial,sans-serif;color:#16241A;"><tr><td style="padding:0 18px 0 0;vertical-align:middle;"><img src="https://app.legacy-shaper.com/signature-logo.png" width="96" alt="Legacy Shaper" style="display:block;width:96px;height:auto;border:0;"></td><td style="border-left:1px solid #C4A052;padding:2px 0 2px 18px;vertical-align:middle;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#16241A;line-height:1.2;">Dylan Lessel</div><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#7A6332;margin-top:6px;">Founder</div><div style="font-size:12px;color:#16241A;margin-top:8px;">+971 58 512 8995</div></td></tr></table></div><button type="button" data-copy="s1">Copier la signature</button><span class="ok" id="m_s1"></span></div>
+<div class="card"><h2>office@legacy-shaper.com</h2><div class="sig" id="s2"><table cellpadding="0" cellspacing="0" border="0" style="font-family:Helvetica,Arial,sans-serif;color:#16241A;"><tr><td style="padding:0 18px 0 0;vertical-align:middle;"><img src="https://app.legacy-shaper.com/signature-logo.png" width="96" alt="Legacy Shaper" style="display:block;width:96px;height:auto;border:0;"></td><td style="border-left:1px solid #C4A052;padding:2px 0 2px 18px;vertical-align:middle;"><div style="font-family:Georgia,'Times New Roman',serif;font-size:17px;color:#16241A;line-height:1.2;">Legacy Shaper Office</div><div style="font-size:10px;letter-spacing:3px;text-transform:uppercase;color:#7A6332;margin-top:6px;">Collection Office</div></td></tr></table></div><button type="button" data-copy="s2">Copier la signature</button><span class="ok" id="m_s2"></span></div>
+<div class="card"><h2>1 · Gmail, sur le Mac (les deux adresses)</h2><ol>
+<li>Ouvrez Gmail (dylan@legacy-shaper.com) → roue dentée → <b>Voir tous les paramètres</b> → onglet <b>Général</b> → <b>Signature</b>.</li>
+<li><b>Créer</b> → nommez-la « Dylan » → collez la signature dylan@.</li>
+<li><b>Créer</b> → nommez-la « Office » → collez la signature office@.</li>
+<li>Juste en dessous, dans <b>Signature par défaut</b> : pour dylan@ choisissez « Dylan » (nouveaux messages et réponses) ; pour office@ choisissez « Office ».</li>
+<li>Tout en bas de la page : <b>Enregistrer les modifications</b>.</li></ol>
+<p>L’app Gmail de l’iPhone reprend automatiquement cette signature.</p></div>
+<div class="card"><h2>2 · Mail, sur l’iPhone</h2><ol>
+<li>Ouvrez cette page sur l’iPhone, touchez <b>Copier la signature</b> (dylan@).</li>
+<li>Réglages → Apps → <b>Mail</b> → <b>Signature</b> → choisissez <b>Par compte</b> si proposé → effacez « Envoyé de mon iPhone » → collez.</li>
+<li>Secouez légèrement l’iPhone si Mail propose d’annuler la mise en forme : choisissez <b>Annuler</b> pour garder le logo.</li></ol></div>
+<div class="card"><h2>3 · Mail, sur le Mac</h2><ol>
+<li>Mail → <b>Réglages</b> → <b>Signatures</b> → choisissez le compte legacy-shaper.com → <b>+</b>.</li>
+<li>Nommez-la « Dylan », <b>décochez</b> « Toujours utiliser ma police par défaut », effacez le texte proposé et collez.</li>
+<li>En bas, « Choisir la signature » : <b>Dylan</b>.</li></ol></div>
+</div>
+<script>
+document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",async()=>{
+  const id=b.dataset.copy, el=document.getElementById(id), m=document.getElementById("m_"+id), html=el.innerHTML;
+  try{ await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"}),"text/plain":new Blob([el.innerText],{type:"text/plain"})})]); m.textContent="Copiée"; }
+  catch(e){ const r=document.createRange(); r.selectNode(el); const s=getSelection(); s.removeAllRanges(); s.addRange(r); try{ document.execCommand("copy"); m.textContent="Copiée"; }catch(x){ m.textContent="Sélectionnée : faites Copier"; } }
+}));
+</script></body></html>
