@@ -116,7 +116,7 @@ fr: {
   needName: "Merci d’indiquer votre prénom et votre nom avant l’envoi.",
   sendFail: "L’envoi n’a pas pu aboutir. Vos réponses sont conservées sur cet appareil : vérifiez la connexion, puis appuyez de nouveau sur « Envoyer mes réponses ».",
   closing: "Avec nos remerciements. Vos réponses nous permettront de mesurer avec justesse le travail que votre collection appelle.",
-  thanks1: "Vos réponses nous sont bien parvenues.", thanks2: "Avec nos remerciements. Elles nous permettront de mesurer avec justesse le travail que votre collection appelle.",
+  thanksTitle: "Merci", thanks1: "Vos réponses ont bien été envoyées et nous sont parvenues.", thanks2: "Notre proposition vous sera adressée prochainement.",
   already: "Vos réponses nous sont déjà parvenues. Avec nos remerciements.",
   invalid: "Ce lien n’est plus actif. Pour recevoir un nouveau lien, écrivez-nous à office@legacy-shaper.com.",
   offline: "Le questionnaire s’ouvre avec une connexion internet. Merci de réessayer dans un instant.",
@@ -146,7 +146,7 @@ en: {
   needName: "Please add your first and last name before sending.",
   sendFail: "Your answers could not be sent just now. They are kept on this device: please check the connection, then tap “Send my answers” again.",
   closing: "With our thanks. Your answers will allow us to measure, with precision, the work your collection calls for.",
-  thanks1: "Your answers have reached us.", thanks2: "With our thanks. They will allow us to measure, with precision, the work your collection calls for.",
+  thanksTitle: "Thank you", thanks1: "Your answers have been sent and have reached us.", thanks2: "Our proposal will follow shortly.",
   already: "Your answers have already reached us. With our thanks.",
   invalid: "This link is no longer active. To receive a new link, please write to office@legacy-shaper.com.",
   offline: "The questionnaire opens with an internet connection. Please try again in a moment.",
@@ -185,6 +185,10 @@ function render() {
   document.querySelectorAll(".lang button").forEach(b => b.classList.toggle("on", b.dataset.lang === lang));
   if (status === "closed" || status === "already") $("#closedMsg").textContent = status === "already" ? t.already : status === "offline" ? t.offline : t.invalid;
   if (status === "offline") $("#closedMsg").textContent = t.offline;
+  // once sent: a short, reassuring page (Dylan, 12 Oct 2026) — the introduction gives way to « Merci »
+  const done = status === "sent" || status === "already";
+  if (done) $("h1").textContent = t.thanksTitle;
+  document.querySelectorAll(".hero .lead, .hero .how").forEach(el => el.classList.toggle("hidden", done));
   if (status !== "open") return;
   $("#form").innerHTML = `
   <section>
@@ -242,7 +246,7 @@ async function send(btn) {
     if (r && r.ok) {
       store.del(); status = "sent";
       try { fetch(`${SB_URL}/functions/v1/scoping-notify`, { method: "POST", keepalive: true, headers: { "apikey": SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ token }) }).catch(() => {}); } catch (e) {}
-      $("#form").classList.add("hidden"); $("#thanks").classList.remove("hidden"); window.scrollTo({ top: 0, behavior: "smooth" }); return;
+      $("#form").classList.add("hidden"); $("#thanks").classList.remove("hidden"); render(); window.scrollTo({ top: 0, behavior: "smooth" }); return;
     }
     if (r && r.reason === "already") { store.del(); status = "already"; $("#form").classList.add("hidden"); $("#closed").classList.remove("hidden"); render(); window.scrollTo({ top: 0 }); return; }
     if (r && r.reason === "link") { status = "closed"; $("#form").classList.add("hidden"); $("#closed").classList.remove("hidden"); render(); window.scrollTo({ top: 0 }); return; }
