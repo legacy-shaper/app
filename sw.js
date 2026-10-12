@@ -1,6 +1,6 @@
 /* Legacy Shaper — client app service worker.
    The app opens instantly and offline; collection data never passes through this cache (Supabase is always live). */
-const VERSION = "ls-client-4455a79b";
+const VERSION = "ls-client-9dd4fa05";
 const APP = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./room-chair.webp", "./room-parquet.jpg"];
 const EXTERNAL = [
   "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js",
@@ -22,6 +22,7 @@ self.addEventListener("fetch", e => {
   const req = e.request; if (req.method !== "GET") return;
   const url = new URL(req.url);
   if (url.hostname.endsWith("supabase.co")) return;
+  if (req.mode === "navigate" && url.pathname.indexOf("/questionnaire/") >= 0) return;   // the questionnaire page is not the app: never cached as it
   if (req.mode === "navigate") { e.respondWith((async () => {
     // fresh page when the network answers quickly; otherwise (airplane mode, Wi-Fi without internet) the copy kept here
     try { const r = await within(fetch(req, { cache: "no-store" }), 3500); if (r.ok) { const c = await caches.open(VERSION); c.put("./index.html", r.clone()); } return r; }
