@@ -413,7 +413,7 @@ const I18N={
    chatPh:"Your message…",chatSend:"Send",chatAttach:"Add a photo or a PDF",chatAbout:"About",chatMe:"You",chatAi:"Legacy Shaper",chatDylanName:"Dylan Lessel",
    chatOffline:"Messages will be available as soon as the connection is back.",chatFail:"Your message could not leave yet. Please try again in a moment.",
    chatTooBig:"This file is larger than 15 MB.",askWork:"A question about this work",
-   atScale:"View at scale",scaleTile:"At scale",plinthLow:"Low plinth",plinthHigh:"90 cm plinth",chairOn:"With chair",chairOff:"Without chair",roomHintNoChair:"Move the work with your finger",scaleAdjust:"Adjust position",scaleInPdf:"Add to the PDF sheet",scaleSave:"Save",roomHint:"Move the work and the chair with your finger",reset:"Reset",saveView:"Save image",
+   atScale:"View at scale",scaleTile:"At scale",plinthLow:"Low plinth",plinthNone:"No plinth",plinthBase:"On a plinth",plinthHigh:"90 cm plinth",chairOn:"With chair",chairOff:"Without chair",roomHintNoChair:"Move the work with your finger",scaleAdjust:"Adjust position",scaleInPdf:"Add to the PDF sheet",scaleSave:"Save",roomHint:"Move the work and the chair with your finger",reset:"Reset",saveView:"Save image",
    walls:{pearl:"Pearl grey",white:"Gallery white",linen:"Linen",green:"Legacy green"},
    foot:"Legacy Shaper Collection · Dubai",sheetFoot:"Inventory sheet · Legacy Shaper Collection Office"},
  fr:{access:"Accès privé",tagline:"Ordre. Rigueur. Indépendance.",intro:"Saisissez l’adresse e-mail enregistrée chez Legacy Shaper. Un code d’accès vous sera envoyé.",email:"Adresse e-mail",getCode:"Recevoir mon code",
@@ -470,7 +470,7 @@ const I18N={
    chatPh:"Votre message…",chatSend:"Envoyer",chatAttach:"Ajouter une photo ou un PDF",chatAbout:"À propos de",chatMe:"Vous",chatAi:"Legacy Shaper",chatDylanName:"Dylan Lessel",
    chatOffline:"La messagerie sera disponible dès le retour de la connexion.",chatFail:"Votre message n’a pas encore pu partir. Réessayez dans un instant.",
    chatTooBig:"Ce fichier dépasse 15 Mo.",askWork:"Une question sur cette œuvre",
-   atScale:"Voir à l’échelle",scaleTile:"À l’échelle",plinthLow:"Socle bas",plinthHigh:"Socle 90 cm",chairOn:"Avec chaise",chairOff:"Sans chaise",roomHintNoChair:"Déplacez l’œuvre du doigt",scaleAdjust:"Ajuster l’emplacement",scaleInPdf:"Ajouter à la fiche PDF",scaleSave:"Enregistrer",roomHint:"Déplacez l’œuvre et la chaise du doigt",reset:"Recentrer",saveView:"Enregistrer l’image",
+   atScale:"Voir à l’échelle",scaleTile:"À l’échelle",plinthLow:"Socle bas",plinthNone:"Sans socle",plinthBase:"Avec socle",plinthHigh:"Socle 90 cm",chairOn:"Avec chaise",chairOff:"Sans chaise",roomHintNoChair:"Déplacez l’œuvre du doigt",scaleAdjust:"Ajuster l’emplacement",scaleInPdf:"Ajouter à la fiche PDF",scaleSave:"Enregistrer",roomHint:"Déplacez l’œuvre et la chaise du doigt",reset:"Recentrer",saveView:"Enregistrer l’image",
    walls:{pearl:"Gris perle",white:"Blanc galerie",linen:"Lin",green:"Vert Legacy"},
    foot:"Legacy Shaper Collection · Dubaï",sheetFoot:"Fiche d’inventaire · Legacy Shaper Collection Office"}
 };
@@ -958,6 +958,7 @@ async function openWork(id,keep){
     <div class="dwrap"><div><div class="stage" id="dStage">${thumbOf(w)?`<img id="dImg" src="${thumbOf(w)}" alt="">`:""}</div>
       ${(views.length>1||scOK)?`<div class="thumbs">${views.map((v,i)=>`<button data-v="${esc(v.id)}" class="${i===0?"on":""}"><img alt="" data-vt="${esc(v.id)}"></button>`).join("")}${scOK?`<button class="sct" id="dScTile" aria-label="${esc(t("atScale"))}"><img alt="" id="dScThumb"><span>${esc(t("scaleTile"))}</span></button>`:""}</div>`:""}
       ${scOK?`<div class="scbar" id="dScBar" hidden><div class="sw">${ROOM.walls.map(([k,c])=>`<button data-scwall="${k}" title="${esc(t("walls")[k])}" aria-label="${esc(t("walls")[k])}" style="background:${c}" class="${k===scSet.wall?"on":""}"></button>`).join("")}</div>
+        ${(canStand(w)&&ON_FLOOR.test(w.category||""))?`<span class="seg"><button data-plinth="none" class="${scSet.plinth==="base"?"":"on"}">${esc(t("plinthNone"))}</button><button data-plinth="base" class="${scSet.plinth==="base"?"on":""}">${esc(t("plinthBase"))}</button></span>`:""}
         ${(canStand(w)&&canHighPlinth(w))?`<span class="seg"><button data-plinth="low" class="${scSet.plinth==="high"?"":"on"}">${esc(t("plinthLow"))}</button><button data-plinth="high" class="${scSet.plinth==="high"?"on":""}">${esc(t("plinthHigh"))}</button></span>`:""}
         <span class="seg"><button data-chair="on" class="${scSet.chair==="off"?"":"on"}">${esc(t("chairOn"))}</button><button data-chair="off" class="${scSet.chair==="off"?"on":""}">${esc(t("chairOff"))}</button></span>
         <button class="tb" id="dScAdj">${esc(t("scaleAdjust"))}</button><label><input type="checkbox" id="dScPdf" ${scPdf?"checked":""}> ${esc(t("scaleInPdf"))}</label></div>`:""}</div>
@@ -990,7 +991,8 @@ async function openWork(id,keep){
     d.querySelectorAll("[data-scwall]").forEach(b=>b.onclick=()=>{ scaleSet(id,Object.assign({},scaleGet(id),{wall:b.dataset.scwall})); d.querySelectorAll("[data-scwall]").forEach(x=>x.classList.toggle("on",x===b)); scaleThumb(); });
     $("#dScAdj").onclick=async()=>openRoom(w, await basePhoto(), { fit:true, init:Object.assign({wall:"pearl"},scaleGet(id)), saveLabel:t("scaleSave"), onSave:st=>{ scaleSet(id,st); d.querySelectorAll("[data-scwall]").forEach(x=>x.classList.toggle("on",x.dataset.scwall===st.wall)); scaleThumb(); } });
     $("#dScPdf").onchange=e=>scalePdfSet(id,e.target.checked);
-    d.querySelectorAll("[data-plinth]").forEach(b=>b.onclick=()=>{ const v=Object.assign({},scaleGet(id)); if(b.dataset.plinth==="high") v.plinth="high"; else delete v.plinth; scaleSet(id,v);
+    d.querySelectorAll("[data-plinth]").forEach(b=>b.onclick=()=>{ const v=Object.assign({},scaleGet(id)); if(b.dataset.plinth==="high"||b.dataset.plinth==="base") v.plinth=b.dataset.plinth; else delete v.plinth;
+      if(b.dataset.plinth==="base"||b.dataset.plinth==="none"){ delete v.artX; delete v.chairX; delete v.artY; } scaleSet(id,v);
       d.querySelectorAll("[data-plinth]").forEach(x=>x.classList.toggle("on",x===b)); scaleThumb(); });
     d.querySelectorAll("[data-chair]").forEach(b=>b.onclick=()=>{ const v=Object.assign({},scaleGet(id)); if(b.dataset.chair==="off") v.chair="off"; else delete v.chair;
       delete v.artX; delete v.chairX; if(canStand(w)) delete v.artY; scaleSet(id,v);
@@ -1109,7 +1111,11 @@ function artBox(s=R){ const {h,w}=s.dims, a=s.cut&&s.cut.angle||0; if(!a) return
 const PLINTH_HIGH_MAX=120;   // above, a 90 cm plinth would lift the piece beyond 2.10 m: the low plinth is kept
 const canHighPlinth=w=>{ const d=standDims(w); return !!d && d.h<=PLINTH_HIGH_MAX && !ON_FLOOR.test(w.category||""); };
 function standGeom(s=R){
-  const o=s.obj, h=s.dims.h, wcm=o?h*o.bw/o.bh:s.dims.w, floor=!!s.onFloor;
+  const o=s.obj, h=s.dims.h, wcm=o?h*o.bw/o.bh:s.dims.w;
+  // furniture: on the parquet, or (chosen: plinth "base") on a low white gallery platform, shown like a sculpture
+  const base=!!s.onFloor&&s.plinth==="base", floor=!!s.onFloor&&!base;
+  if(base){ const margin=Math.max(10,wcm*0.06), pw=wcm+2*margin, pd=Math.min(200,(s.dims.d||45)+2*margin), zb=ROOM.D-10, zf=zb-pd;
+    return {h,wcm,ph:12,pw,pd,zb,zf,zc:(zb+zf)/2,floor:false,hi:false,base:true}; }
   // low plinth: a platform for large pieces, a pedestal for small ones; high plinth (chosen): 90 cm, for pieces up to 1.20 m
   const hi=!floor&&s.plinth==="high"&&h<=PLINTH_HIGH_MAX;
   const ph=floor?0:hi?90:Math.max(12,Math.min(90,105-h*0.9));
@@ -1139,7 +1145,7 @@ function roomApply(s,set){ if(!set) return false; let ok=false;
   if(ok&&s.stand){ s.extentW=0; return ok; }
   if(ok){ const w=artBox(s).w; s.extentW=2*Math.max(Math.abs(s.artX)+w/2,chairExt(s)); }
   return ok; }
-const roomSettings=(s=R)=>Object.assign({wall:s.wall,artX:+s.artX.toFixed(2),artY:+s.artY.toFixed(2),chairX:+s.chairX.toFixed(2)},s.cutOff?{cut:"off"}:{},s.plinth==="high"?{plinth:"high"}:{},s.noChair?{chair:"off"}:{});
+const roomSettings=(s=R)=>Object.assign({wall:s.wall,artX:+s.artX.toFixed(2),artY:+s.artY.toFixed(2),chairX:+s.chairX.toFixed(2)},s.cutOff?{cut:"off"}:{},(s.plinth==="high"||(s.onFloor&&s.plinth==="base"))?{plinth:s.plinth}:{},s.noChair?{chair:"off"}:{});
 /* layout: px per cm on the wall, wall base line, horizon. fit: frame everything around the composition (static image) */
 function roomFit(s,W,H,dpr,fit){
   if(s.stand) return roomFitStand(s,W,H,dpr);
@@ -1863,5 +1869,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v7c3b1e1d</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v8adf8a17</div>
 </body></html>
