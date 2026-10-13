@@ -384,7 +384,8 @@ const I18N={
    linkedExp:"Expenses for this work",linkedDocs:"Documents",none:"—",
    byYear:"By year",general:"Collection",perWork:"Per work",oneExp:"expense",nExp:"expenses",total:"Total",allYears:"All years",noExp:"No expenses shared for this period.",
    noDocs:"No documents shared yet.",download:"Download",
-   cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",other:"Other services"},
+   cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",other:"Other services",storage:"Storage",restoration:"Restoration and conservation",framing:"Framing",photo:"Photography",customs:"Customs and duties"},
+   byPlace:"By place",lsInv:"Your Legacy Shaper invoices",invPaid:"Settled",invDue:"To be settled",yourCosts:"Costs of your collection",
    menu:"Menu",signedAs:"Signed in as",refresh:"Refresh now",exportAll:"Download my collection",exportSub:"Inventory spreadsheet and images, in one file",
    termsTitle:"Terms of use",termsIntro:"Before opening the collection, please read the terms for Authorised Users of The Legacy.",termsAccept:"I accept",termsMsg:"Your acceptance could not be recorded. Please check the connection and try again.",
    termsHead:"The Legacy — Terms for Authorised Users — version 1.0",
@@ -440,7 +441,8 @@ const I18N={
    linkedExp:"Dépenses de cette œuvre",linkedDocs:"Documents",none:"—",
    byYear:"Par année",general:"Collection",perWork:"Par œuvre",oneExp:"dépense",nExp:"dépenses",total:"Total",allYears:"Toutes les années",noExp:"Aucune dépense partagée sur cette période.",
    noDocs:"Aucun document partagé pour le moment.",download:"Télécharger",
-   cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",other:"Autres prestations"},
+   cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",other:"Autres prestations",storage:"Stockage",restoration:"Restauration et conservation",framing:"Encadrement",photo:"Photographie",customs:"Douane et taxes"},
+   byPlace:"Par lieu",lsInv:"Vos factures Legacy Shaper",invPaid:"Réglée",invDue:"À régler",yourCosts:"Frais de votre collection",
    menu:"Menu",signedAs:"Connecté en tant que",refresh:"Mettre à jour",exportAll:"Télécharger ma collection",exportSub:"Inventaire au format tableur et images, en un seul fichier",
    termsTitle:"Conditions d’utilisation",termsIntro:"Avant d’ouvrir la collection, merci de prendre connaissance des conditions applicables aux utilisateurs de The Legacy.",termsAccept:"J’accepte",termsMsg:"Votre acceptation n’a pas pu être enregistrée. Merci de vérifier la connexion et de réessayer.",
    termsHead:"The Legacy — Conditions applicables aux Utilisateurs Autorisés — version 1.0",
@@ -663,9 +665,12 @@ async function fetchCollection(cid){
   const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed").catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
   const ids=works.map(w=>w.id);
   let views=[]; for(let i=0;i<ids.length;i+=80) views=views.concat(await q(sb.from("artwork_views").select("id,artwork_id,sort,created_at").in("artwork_id",ids.slice(i,i+80))));
-  const expenses=await q(sb.from("expenses").select(EXP_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("date",{ascending:false}));
+  const eq=cols=>q(sb.from("expenses").select(cols).eq("collection_id",cid).eq("visible_to_client",true).order("date",{ascending:false}));
+  const expenses=await eq(EXP_COLS+",place").catch(()=>eq(EXP_COLS));   // place: SQL 021 (13 Oct 2026); older databases still load
+  // Collection Office invoices issued to this collection (SQL 021): never a Legacy Shaper bill, never another collection's
+  const invoices=await q(sb.from("invoices").select("id,number,date,due,status,currency,client_total,items").eq("collection_id",cid).order("date",{ascending:false})).catch(()=>[]);
   const docs=await q(sb.from("documents").select(DOC_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("created_at",{ascending:false}));
-  return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs };
+  return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs, invoices };
 }
 /* Connection journal (SQL 008 + 010: public.log_events → audit.access_log, append-only). Every opening of the app, sign-out,
    collection opened, work viewed, document downloaded and export is recorded, ONLINE AND OFFLINE: each event is first written
@@ -852,15 +857,20 @@ function expByWork(per){
 function viewExpenses(){
   const all=(S.data&&S.data.expenses)||[]; const years=expYears();
   const rows=all.filter(e=>!S.year||String(e.date||"").startsWith(S.year));
-  const gen=rows.filter(e=>!e.artwork_id), per=rows.filter(e=>e.artwork_id);
+  const gen=rows.filter(e=>!e.artwork_id&&!e.place), placed=rows.filter(e=>!e.artwork_id&&e.place), per=rows.filter(e=>e.artwork_id);
+  const byPlace={}; placed.forEach(e=>{ (byPlace[e.place]=byPlace[e.place]||[]).push(e); });
+  const invs=((S.data&&S.data.invoices)||[]).filter(i=>!S.year||String(i.date||"").startsWith(S.year));
+  const invHTML=invs.length?`<section class="block"><h3>${esc(t("lsInv"))}<small>${esc(curLine(sumByCur(invs,"client_total","currency")))}</small></h3>${invs.map(i=>{ const it=(i.items||[])[0]||{};
+      return `<div class="line"><span class="mid"><b>${esc(it.title||i.number||"")}</b><div>${esc(i.number||"")} · ${esc(i.status==="paid"?t("invPaid"):t("invDue"))}</div></span><span class="amt">${esc(fmtMoney(i.client_total,i.currency))}<div>${esc(fmtDate(i.date))}</div></span></div>`; }).join("")}</section>`:"";
   const byCat={}; rows.forEach(e=>{ const k=e.category||"other"; (byCat[k]=byCat[k]||[]).push(e); });
   return `<div class="chipline"><button class="chip ${!S.year?"on":""}" data-y="">${esc(t("allYears"))}</button>${years.map(y=>`<button class="chip ${S.year===y?"on":""}" data-y="${y}">${y}</button>`).join("")}</div>
     ${rows.length?`<section class="block"><h3>${esc(t("total"))}${S.year?` ${S.year}`:""}<small>${rows.length}</small></h3>
       ${Object.keys(byCat).sort().map(k=>`<div class="line"><span class="mid"><b>${esc(t("cat")[k]||t("cat").other)}</b></span><span class="amt">${esc(curLine(sumByCur(byCat[k],"amount","currency")))}</span></div>`).join("")}
       <div class="tot"><span>${esc(t("total"))}</span><span>${esc(curLine(sumByCur(rows,"amount","currency")))}</span></div></section>
+    ${Object.keys(byPlace).length?`<section class="block"><h3>${esc(t("byPlace"))}<small>${esc(curLine(sumByCur(placed,"amount","currency")))}</small></h3>${Object.keys(byPlace).sort().map(k=>`<div class="wgrp"><div class="line whead"><span class="mid"><b>${esc(k)}</b></span><span class="amt">${esc(curLine(sumByCur(byPlace[k],"amount","currency")))}</span></div>${byPlace[k].map(e=>expLine(e,"group")).join("")}</div>`).join("")}</section>`:""}
     ${gen.length?`<section class="block"><h3>${esc(t("general"))}<small>${esc(curLine(sumByCur(gen,"amount","currency")))}</small></h3>${gen.map(e=>expLine(e)).join("")}</section>`:""}
     ${per.length?`<section class="block"><h3>${esc(t("perWork"))}<small>${esc(curLine(sumByCur(per,"amount","currency")))}</small></h3>${expByWork(per)}</section>`:""}`
-    :`<div class="empty">${esc(t("noExp"))}</div>`}`;
+    :`<div class="empty">${esc(t("noExp"))}</div>`}${invHTML}`;
 }
 function docLine(d){ const w=d.artwork_id&&workById(d.artwork_id);
   return `<button class="doc" data-doc="${esc(d.id)}"><div><b style="font-weight:500">${esc(d.name)}</b><br><span>${w?`${esc(w.artist)}, ${esc(w.title)} · `:""}${esc(fmtDate(d.created_at))}</span></div><span>${esc(t("download"))} ↓</span></button>`; }
@@ -1853,5 +1863,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v5f1b49e6</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v7c3b1e1d</div>
 </body></html>
