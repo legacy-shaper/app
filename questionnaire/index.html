@@ -115,6 +115,8 @@ fr: {
   send: "Envoyer mes réponses", sending: "Envoi…",
   remind: "Quelques lignes restent sans réponse :", remindEnd: "Vous pouvez les compléter, ou envoyer vos réponses telles quelles.", complete: "Compléter", sendAnyway: "Envoyer tel quel",
   needName: "Merci d’indiquer votre prénom et votre nom avant l’envoi.",
+  previewNote: "Aperçu avant l’envoi : aucun lien n’a été créé, rien n’est enregistré ni envoyé.",
+  previewSend: "Aperçu : l’envoi est désactivé. Le client, lui, enverra ses réponses avec ce bouton.",
   sendFail: "L’envoi n’a pas pu aboutir. Vos réponses sont conservées sur cet appareil : vérifiez la connexion, puis appuyez de nouveau sur « Envoyer mes réponses ».",
   closing: "Avec nos remerciements. Vos réponses nous permettront de mesurer avec justesse le travail que votre collection appelle.",
   thanksTitle: "Merci", thanks1: "Vos réponses ont bien été envoyées et nous sont parvenues.", thanks2: "Notre proposition vous sera adressée prochainement.",
@@ -145,6 +147,8 @@ en: {
   send: "Send my answers", sending: "Sending…",
   remind: "A few lines are still unanswered:", remindEnd: "You may complete them, or send your answers as they are.", complete: "Complete", sendAnyway: "Send as they are",
   needName: "Please add your first and last name before sending.",
+  previewNote: "Preview before sending: no link has been created, nothing is saved or sent.",
+  previewSend: "Preview: sending is disabled. The client will send the answers with this button.",
   sendFail: "Your answers could not be sent just now. They are kept on this device: please check the connection, then tap “Send my answers” again.",
   closing: "With our thanks. Your answers will allow us to measure, with precision, the work your collection calls for.",
   thanksTitle: "Thank you", thanks1: "Your answers have been sent and have reached us.", thanks2: "Our proposal will follow shortly.",
@@ -165,9 +169,13 @@ const K = {
 const $ = s => document.querySelector(s);
 const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const token = (new URLSearchParams(location.search).get("k") || "").toLowerCase();
+// Aperçu avant l'envoi (13 Oct 2026): ?preview=1&lang=fr|en, opened from The Legacy before any link exists.
+// Nothing is read from or written to the base, nothing is kept on the device, sending is disabled.
+const PREVIEW = new URLSearchParams(location.search).get("preview") === "1";
+const PREVIEW_LANG = new URLSearchParams(location.search).get("lang") === "en" ? "en" : "fr";
 // Journal des ouvertures (014): the page tells only the type of device. Dylan's own checks (link opened from
 // The Legacy with « Voir la page », i.e. &apercu=1) are kept apart, and this browser is remembered as his.
-const SELF = (() => { try {
+const SELF = PREVIEW || (() => { try {
   const u = new URL(location.href);
   if (u.searchParams.get("apercu") === "1") { localStorage.setItem("ls-self", "1"); u.searchParams.delete("apercu"); history.replaceState(null, "", u.pathname + u.search + u.hash); return true; }
   return localStorage.getItem("ls-self") === "1"; } catch (e) { return false; } })();
@@ -177,7 +185,7 @@ const DEVICE = (() => { const ua = navigator.userAgent || "";
   if (/Macintosh/.test(ua)) return "Mac"; if (/Windows/.test(ua)) return "Windows"; return "Ordinateur"; })();
 const DRAFT = "ls-scoping-" + token;
 let lang = "fr", A = { items: {} }, status = "loading";
-const store = { get() { try { return JSON.parse(localStorage.getItem(DRAFT) || "null"); } catch (e) { return null; } },
+const store = PREVIEW ? { get() { return null; }, set() {}, del() {} } : { get() { try { return JSON.parse(localStorage.getItem(DRAFT) || "null"); } catch (e) { return null; } },
   set(v) { try { localStorage.setItem(DRAFT, JSON.stringify(v)); } catch (e) {} }, del() { try { localStorage.removeItem(DRAFT); } catch (e) {} } };
 
 function pills(field, keys, labels, multi, sub) {
@@ -250,6 +258,7 @@ async function rpc(name, body) {
 
 async function send(btn) {
   const t = T[lang], m = $("#msg");
+  if (PREVIEW) { m.textContent = t.previewSend; m.classList.add("warn"); return; }
   btn.disabled = true; btn.textContent = t.sending;
   const answers = Object.assign({}, A, { lang, sentAt: new Date().toISOString(), device: /iPhone|iPad/.test(navigator.userAgent) ? "iOS" : /Android/.test(navigator.userAgent) ? "Android" : /Macintosh/.test(navigator.userAgent) ? "Mac" : "Ordinateur" });
   try {
@@ -304,8 +313,11 @@ document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click
 (async function start() {
   const draft = store.get(); if (draft && typeof draft === "object") A = Object.assign({ items: {} }, draft);
   lang = (A.lang === "en" || A.lang === "fr") ? A.lang : ((navigator.language || "").startsWith("fr") ? "fr" : "en");
+  if (PREVIEW) lang = PREVIEW_LANG;
   render();
-  if (!/^[0-9a-f]{32}$/.test(token)) { status = "closed"; }
+  if (PREVIEW) { status = "open"; const n = $("#selfnote"); n.textContent = T[lang].previewNote; n.classList.remove("hidden");
+    document.querySelectorAll(".lang button").forEach(b => b.addEventListener("click", () => { n.textContent = T[lang].previewNote; })); }
+  else if (!/^[0-9a-f]{32}$/.test(token)) { status = "closed"; }
   else {
     try {
       let r;
