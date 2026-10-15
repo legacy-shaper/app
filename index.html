@@ -148,6 +148,7 @@ body.selecting #main{padding-bottom:110px}
 .card .ti{font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.3}
 .card .lo{font-size:11.5px;color:var(--muted);margin-top:4px}
 .card .cr{font-size:11px;color:var(--gold-text);margin-top:4px;letter-spacing:.2px}
+.pur-amt{margin-left:auto;font-family:var(--serif,Georgia,serif);font-size:16px;color:var(--green,#16382b)}
 .cnd{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
 .cnd-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cnd-d{font-family:var(--serif,Georgia,serif);font-size:17px}
 .cnd-st{font-size:12px;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--ink)}
@@ -396,6 +397,9 @@ const I18N={
    crO:{upright:"Upright (on its edge)",flat:"Flat",any:"Either way"},
    linkedExp:"Expenses for this work",linkedDocs:"Documents",none:"—",
    condReports:"Condition reports",condLine:"Condition report",condOpen:"View",condShare:"Share",condPhotos:"Photos",close:"Close",
+   purchDocs:"Purchase invoices",purchKind:{invoice:"Invoice",auction:"Auction house invoice",proforma:"Pro forma invoice",other:"Purchase document"},
+   purchIss:{gallery:"Gallery",auction:"Auction house",dealer:"Dealer",artist:"Artist / studio",collector:"Private collector",foundation:"Foundation / institution"},
+   purchNo:"No.",purchPaid:"Paid on",purchBuyer:"Billed to",purchLot:"lot",purchHammer:"Hammer price",purchFees:"Buyer’s premium and taxes",purchPrice:"Price",purchTotal:"Total",
    condSt:{excellent:"Excellent condition",good:"Good condition",fair:"Fair condition",watch:"To be monitored",damage:"Damage noted"},
    byYear:"By year",general:"Collection",perWork:"Per work",oneExp:"expense",nExp:"expenses",total:"Total",allYears:"All years",noExp:"No expenses shared for this period.",
    noDocs:"No documents shared yet.",download:"Download",
@@ -455,6 +459,9 @@ const I18N={
    crO:{upright:"Debout (sur la tranche)",flat:"À plat",any:"Indifférent"},
    linkedExp:"Dépenses de cette œuvre",linkedDocs:"Documents",none:"—",
    condReports:"Constats d’état",condLine:"Constat d’état",condOpen:"Voir",condShare:"Partager",condPhotos:"Photos",close:"Fermer",
+   purchDocs:"Factures d’achat",purchKind:{invoice:"Facture",auction:"Bordereau de maison de vente",proforma:"Facture proforma",other:"Pièce d’achat"},
+   purchIss:{gallery:"Galerie",auction:"Maison de vente",dealer:"Marchand",artist:"Artiste / atelier",collector:"Collectionneur privé",foundation:"Fondation / institution"},
+   purchNo:"N°",purchPaid:"Payée le",purchBuyer:"Au nom de",purchLot:"lot",purchHammer:"Prix d’adjudication",purchFees:"Frais acheteur et taxes",purchPrice:"Prix",purchTotal:"Total",
    condSt:{excellent:"Très bon état",good:"Bon état",fair:"État correct",watch:"À surveiller",damage:"Dommage constaté"},
    byYear:"Par année",general:"Collection",perWork:"Par œuvre",oneExp:"dépense",nExp:"dépenses",total:"Total",allYears:"Toutes les années",noExp:"Aucune dépense partagée sur cette période.",
    noDocs:"Aucun document partagé pour le moment.",download:"Télécharger",
@@ -679,7 +686,7 @@ async function fetchCollection(cid){
   if(!coll){ const e=new Error("access withdrawn"); e.revoked=true; throw e; }   // online, but this collection is no longer shared with this user
   // scale_view: the at-scale composition set by Legacy Shaper (SQL 005), crating: packing shared with the collector (SQL 006); older databases still load
   const wq=cols=>q(sb.from("artworks").select(cols).eq("collection_id",cid).order("artist"));
-  const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed,condition_reports").catch(()=>wq(ART_COLS+",scale_view,crating,dimensions_framed")).catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
+  const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed,condition_reports,purchase_docs").catch(()=>wq(ART_COLS+",scale_view,crating,dimensions_framed,condition_reports")).catch(()=>wq(ART_COLS+",scale_view,crating,dimensions_framed")).catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
   const ids=works.map(w=>w.id);
   let views=[]; for(let i=0;i<ids.length;i+=80) views=views.concat(await q(sb.from("artwork_views").select("id,artwork_id,sort,created_at").in("artwork_id",ids.slice(i,i+80))));
   const eq=cols=>q(sb.from("expenses").select(cols).eq("collection_id",cid).eq("visible_to_client",true).order("date",{ascending:false}));
@@ -836,6 +843,20 @@ function condHtml(w){ const rs=condList(w); if(!rs.length) return "";
       ${by?`<div class="cnd-by">${esc(by)}</div>`:""}${r.notes?`<p class="cnd-n">${esc(r.notes)}</p>`:""}
       ${files.map(d=>`<div class="cnd-acts"><span class="nm">${esc(d.name)}</span><button data-cndopen="${esc(d.id)}">${esc(t("condOpen"))}</button><button data-cndshare="${esc(d.id)}">${esc(t("condShare"))}</button><button data-doc="${esc(d.id)}">${esc(t("download"))} ↓</button></div>`).join("")}
       ${photos.length?`<div class="cnd-ph">${photos.map(d=>`<button data-cndph="${esc(d.id)}" aria-label="${esc(d.cap||t("condPhotos"))}"><img alt="${esc(d.cap||"")}" data-cndimg="${esc(d.id)}"></button>`).join("")}</div>`:""}</div>`; }).join("")}</div>`; }
+/* Purchase invoices / auction slips shared by Legacy Shaper (SQL 023, 15 Oct 2026): artworks.purchase_docs (newest first)
+   + documents purchase_invoice. Opened, shared or downloaded from the work's page (same buttons as the condition reports). */
+const purchList=w=>(Array.isArray(w.purchase_docs)?w.purchase_docs:[]).filter(r=>r&&typeof r==="object").sort((a,b)=>String(b.date||"").localeCompare(String(a.date||"")));
+const pNum=v=>{ const n=parseFloat(String(v??"").replace(/\s/g,"").replace(/,/g,".")); return isFinite(n)?n:0; };
+function purchHtml(w){ const rs=purchList(w); if(!rs.length) return "";
+  return `<div class="sec" id="dPurch"><h4>${esc(t("purchDocs"))}</h4>${rs.map(r=>{ const auc=r.kind==="auction"||r.issuerType==="auction", cur=r.currency||"USD";
+    const tot=pNum(r.total)||(pNum(r.amount)+pNum(r.fees)); const iss=(t("purchIss")||{})[r.issuerType]||"";
+    const who=[r.issuer,iss,r.number?t("purchNo")+" "+r.number:""].filter(Boolean).join(" · ");
+    const sub=[r.buyer?t("purchBuyer")+" "+r.buyer:"",auc&&(r.sale||r.lot)?[r.sale,r.lot?t("purchLot")+" "+r.lot:""].filter(Boolean).join(", "):"",r.payDate?t("purchPaid")+" "+fmtDate(r.payDate):""].filter(Boolean).join(" · ");
+    const det=pNum(r.fees)?`${esc(auc?t("purchHammer"):t("purchPrice"))} ${esc(fmtMoney(pNum(r.amount),cur))} · ${esc(t("purchFees"))} ${esc(fmtMoney(pNum(r.fees),cur))}`:"";
+    const files=(r.files||[]).map(f=>docByPath("files/"+f.id)).filter(Boolean);
+    return `<div class="cnd pur"><div class="cnd-h"><span class="cnd-d">${esc(r.date?fmtDate(r.date):"—")}</span><span class="cnd-st">${esc((t("purchKind")||{})[r.kind]||(t("purchKind")||{}).invoice||"")}</span>${tot?`<span class="pur-amt">${esc(fmtMoney(tot,cur))}</span>`:""}</div>
+      ${who?`<div class="cnd-by">${esc(who)}</div>`:""}${sub?`<div class="cnd-by">${esc(sub)}</div>`:""}${det?`<p class="cnd-n">${det}</p>`:""}
+      ${files.map(d=>`<div class="cnd-acts"><span class="nm">${esc(d.name)}</span><button data-cndopen="${esc(d.id)}">${esc(t("condOpen"))}</button><button data-cndshare="${esc(d.id)}">${esc(t("condShare"))}</button><button data-doc="${esc(d.id)}">${esc(t("download"))} ↓</button></div>`).join("")}</div>`; }).join("")}</div>`; }
 async function docBlob(id){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return null;
   let blob=await idb.get("doc:"+id); if(blob) return blob;
   const {data,error}=await sb.storage.from(CFG.bucket).download(doc.storage_path); if(error) throw error; idb.set("doc:"+id,data); return data; }
@@ -993,7 +1014,7 @@ async function openWork(id,keep){
   const w=workById(id); if(!w) return; S.openId=id; logAccess("open_work",id);
   const views=((S.data.views)||[]).filter(v=>v.artwork_id===id).sort((a,b)=>(a.sort||0)-(b.sort||0)||String(a.created_at).localeCompare(String(b.created_at)));
   const exps=((S.data.expenses)||[]).filter(e=>e.artwork_id===id);
-  const allDocs=((S.data.docs)||[]).filter(d=>d.artwork_id===id), crDocs=allDocs.filter(d=>d.kind==="crating"), docs=allDocs.filter(d=>d.kind!=="crating"&&d.kind!=="condition_report"&&d.kind!=="condition_photo");
+  const allDocs=((S.data.docs)||[]).filter(d=>d.artwork_id===id), crDocs=allDocs.filter(d=>d.kind==="crating"), pShown=new Set(purchList(w).flatMap(r=>(r.files||[]).map(f=>"files/"+f.id))), docs=allDocs.filter(d=>d.kind!=="crating"&&d.kind!=="condition_report"&&d.kind!=="condition_photo"&&!pShown.has(d.storage_path));
   const list=filteredWorks().length?filteredWorks():works(); const idx=list.findIndex(x=>x.id===id);
   const acq=[w.acquisition_date?fmtDate(w.acquisition_date):"", w.acquisition_price!=null?fmtMoney(w.acquisition_price,w.acquisition_currency):"", w.acquisition_source||""].filter(Boolean).map(esc).join("\n");
   const ins=w.insured_value!=null?esc(fmtMoney(w.insured_value,w.insured_currency)):"";
@@ -1014,6 +1035,7 @@ async function openWork(id,keep){
         ${fact("ownership",esc(ownershipLine(w)))}${fact("location",loc)}${fact("acquisition",acq)}${fact("insurance",ins)}${fact("condition",esc(w.condition))}
         ${fact("provenance",esc(w.provenance))}${fact("exhibitions",esc(w.exhibitions))}${fact("literature",esc(w.literature))}${fact("notes",esc(w.notes))}${fact("ref",esc(w.ref))}</dl>
       <div class="acts">${canViewAtScale(w)?`<button id="dRoom">${esc(t("atScale"))}</button>`:""}<button id="dPdf">${esc(t("sheetPdf"))}</button><button class="alt" id="dImgDl">${esc(t("image"))}</button>${C.ok?`<button class="alt" id="dAsk">${esc(t("askWork"))}</button>`:""}</div>
+      ${purchHtml(w)}
       ${condHtml(w)}
       ${exps.length?`<div class="sec"><h4>${esc(t("linkedExp"))}</h4><section class="block">${exps.map(e=>expLine(e,"page")).join("")}<div class="tot"><span>${esc(t("total"))}</span><span>${esc(curLine(sumByCur(exps,"amount","currency")))}</span></div></section></div>`:""}
       ${cratingHtml(w,crDocs)}
@@ -1918,5 +1940,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vc56a03a7</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vd461ea0a</div>
 </body></html>
