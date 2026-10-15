@@ -720,6 +720,14 @@ function showPicker(){
 const ART_COLS="id,collection_id,ref,artist,title,year,medium,dimensions,category,edition_type,edition_number,owner_name,ownership_share,ownership_note,co_owners,ownership_visible,location_text,location_since,provenance,exhibitions,literature,condition,insured_value,insured_currency,acquisition_date,acquisition_price,acquisition_currency,acquisition_source,notes,thumb,updated_at";
 const EXP_COLS="id,supplier,label,category,date,amount,currency,artwork_id,collection_id,status,notes";
 const DOC_COLS="id,kind,name,mime,size,storage_path,artwork_id,expense_id,created_at";
+/* Demonstration collection (15 Oct 2026, Dylan): illustrative invoices shown in the app only. They never exist in
+   public.invoices (no deletion is ever possible there), never take a Legacy Shaper number and never reach the accounts. */
+const DEMO_COLL="a0e1d2c3-0000-4000-8000-00000000d3e0";
+const DEMO_INVOICES=[
+  {id:"demo-inv-4",number:"LSC-DEMO-04",date:"2026-10-08",due:"2026-11-07",status:"sent",currency:"EUR",client_total:2950,items:[{title:"Fine art transport · Capri to Geneva (winter return)"}]},
+  {id:"demo-inv-3",number:"LSC-DEMO-03",date:"2026-06-12",due:"2026-07-12",status:"paid",currency:"EUR",client_total:3850,items:[{title:"Fine art transport · Geneva Freeport to Lausanne (loan)"}]},
+  {id:"demo-inv-2",number:"LSC-DEMO-02",date:"2026-04-20",due:"2026-05-20",status:"paid",currency:"USD",client_total:8200,items:[{title:"Onboarding of the collection · balance"}]},
+  {id:"demo-inv-1",number:"LSC-DEMO-01",date:"2026-03-02",due:"2026-03-02",status:"paid",currency:"USD",client_total:33500,items:[{title:"Onboarding deposit and annual plan, year 1"}]}];
 async function fetchCollection(cid){
   const q=async p=>{ const {data,error}=await p; if(error) throw error; return data||[]; };
   const [coll]=await q(sb.from("collections").select("id,slug,name,subtitle,display_currency,cover_artwork_id").eq("id",cid));
@@ -732,7 +740,8 @@ async function fetchCollection(cid){
   const eq=cols=>q(sb.from("expenses").select(cols).eq("collection_id",cid).eq("visible_to_client",true).order("date",{ascending:false}));
   const expenses=await eq(EXP_COLS+",place").catch(()=>eq(EXP_COLS));   // place: SQL 021 (13 Oct 2026); older databases still load
   // Collection Office invoices issued to this collection (SQL 021): never a Legacy Shaper bill, never another collection's
-  const invoices=await q(sb.from("invoices").select("id,number,date,due,status,currency,client_total,items").eq("collection_id",cid).order("date",{ascending:false})).catch(()=>[]);
+  let invoices=await q(sb.from("invoices").select("id,number,date,due,status,currency,client_total,items").eq("collection_id",cid).order("date",{ascending:false})).catch(()=>[]);
+  if(cid===DEMO_COLL&&!invoices.length) invoices=DEMO_INVOICES;   // demo only: illustrative, never in public.invoices nor in Legacy Shaper's accounts
   const docs=await q(sb.from("documents").select(DOC_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("created_at",{ascending:false}));
   return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs, invoices };
 }
@@ -2016,7 +2025,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v40277f21</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v5a3dd8c1</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
