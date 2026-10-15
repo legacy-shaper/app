@@ -147,6 +147,19 @@ body.selecting #main{padding-bottom:110px}
 .card .ar{font-weight:600;font-size:13.5px}
 .card .ti{font-family:var(--serif);font-style:italic;font-size:16px;line-height:1.3}
 .card .lo{font-size:11.5px;color:var(--muted);margin-top:4px}
+.card .cr{font-size:11px;color:var(--gold-text);margin-top:4px;letter-spacing:.2px}
+.cnd{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px;background:var(--surface)}
+.cnd-h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.cnd-d{font-family:var(--serif,Georgia,serif);font-size:17px}
+.cnd-st{font-size:12px;border-radius:999px;padding:3px 10px;border:1px solid var(--line);color:var(--ink)}
+.cnd-by{font-size:13px;color:var(--muted);margin:4px 0 8px}.cnd-n{font-size:13.5px;margin:0 0 8px;white-space:pre-line}
+.cnd-acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:6px}.cnd-acts .nm{flex:1 1 100%;font-size:13px}
+.cnd-acts button{min-height:40px;padding:8px 14px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--ink);font:inherit;font-size:13.5px;cursor:pointer}
+.cnd-ph{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:6px;margin-top:6px}
+.cnd-ph button{padding:0;border:1px solid var(--line);border-radius:8px;overflow:hidden;aspect-ratio:1;background:var(--surface-2,#eee);cursor:zoom-in}
+.cnd-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.cndlb{position:fixed;inset:0;z-index:90;background:rgba(10,12,10,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px}
+.cndlb img{max-width:100%;max-height:80vh;object-fit:contain}.cndlb p{color:#eee;font-size:14px;margin:10px 0}
+.cndlb button{min-height:44px;padding:8px 18px;border-radius:999px;border:1px solid #888;background:transparent;color:#fff;font:inherit;margin-top:6px}
 .empty{color:var(--muted);padding:40px 10px;text-align:center;font-family:var(--serif);font-size:19px}
 
 /* ---------- lists ---------- */
@@ -382,6 +395,8 @@ const I18N={
    crH:{"1p":"1 person","2p":"2 people","3p":"3 people or more",forklift:"Forklift / pallet truck"},
    crO:{upright:"Upright (on its edge)",flat:"Flat",any:"Either way"},
    linkedExp:"Expenses for this work",linkedDocs:"Documents",none:"—",
+   condReports:"Condition reports",condLine:"Condition report",condOpen:"View",condShare:"Share",condPhotos:"Photos",close:"Close",
+   condSt:{excellent:"Excellent condition",good:"Good condition",fair:"Fair condition",watch:"To be monitored",damage:"Damage noted"},
    byYear:"By year",general:"Collection",perWork:"Per work",oneExp:"expense",nExp:"expenses",total:"Total",allYears:"All years",noExp:"No expenses shared for this period.",
    noDocs:"No documents shared yet.",download:"Download",
    cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",other:"Other services",storage:"Storage",restoration:"Restoration and conservation",framing:"Framing",photo:"Photography",customs:"Customs and duties"},
@@ -439,6 +454,8 @@ const I18N={
    crH:{"1p":"1 personne","2p":"2 personnes","3p":"3 personnes et plus",forklift:"Chariot / transpalette"},
    crO:{upright:"Debout (sur la tranche)",flat:"À plat",any:"Indifférent"},
    linkedExp:"Dépenses de cette œuvre",linkedDocs:"Documents",none:"—",
+   condReports:"Constats d’état",condLine:"Constat d’état",condOpen:"Voir",condShare:"Partager",condPhotos:"Photos",close:"Fermer",
+   condSt:{excellent:"Très bon état",good:"Bon état",fair:"État correct",watch:"À surveiller",damage:"Dommage constaté"},
    byYear:"Par année",general:"Collection",perWork:"Par œuvre",oneExp:"dépense",nExp:"dépenses",total:"Total",allYears:"Toutes les années",noExp:"Aucune dépense partagée sur cette période.",
    noDocs:"Aucun document partagé pour le moment.",download:"Télécharger",
    cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",other:"Autres prestations",storage:"Stockage",restoration:"Restauration et conservation",framing:"Encadrement",photo:"Photographie",customs:"Douane et taxes"},
@@ -662,7 +679,7 @@ async function fetchCollection(cid){
   if(!coll){ const e=new Error("access withdrawn"); e.revoked=true; throw e; }   // online, but this collection is no longer shared with this user
   // scale_view: the at-scale composition set by Legacy Shaper (SQL 005), crating: packing shared with the collector (SQL 006); older databases still load
   const wq=cols=>q(sb.from("artworks").select(cols).eq("collection_id",cid).order("artist"));
-  const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed").catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
+  const works=await wq(ART_COLS+",scale_view,crating,dimensions_framed,condition_reports").catch(()=>wq(ART_COLS+",scale_view,crating,dimensions_framed")).catch(()=>wq(ART_COLS+",scale_view,crating")).catch(()=>wq(ART_COLS+",scale_view")).catch(()=>wq(ART_COLS));
   const ids=works.map(w=>w.id);
   let views=[]; for(let i=0;i<ids.length;i+=80) views=views.concat(await q(sb.from("artwork_views").select("id,artwork_id,sort,created_at").in("artwork_id",ids.slice(i,i+80))));
   const eq=cols=>q(sb.from("expenses").select(cols).eq("collection_id",cid).eq("visible_to_client",true).order("date",{ascending:false}));
@@ -805,7 +822,37 @@ const works=()=>(S.data&&S.data.works)||[];
 const thumbOf=w=>w.thumb||"";
 const workById=id=>works().find(w=>w.id===id);
 function cardHtml(w){ return `<button class="card ${S.sel&&S.sel.has(w.id)?"picked":""}" data-w="${esc(w.id)}" ${S.sel?`aria-pressed="${S.sel.has(w.id)}"`:""}><div class="ph">${thumbOf(w)?`<img loading="lazy" src="${thumbOf(w)}" alt="">`:""}</div>
-  <div class="tx"><div class="ar">${esc(w.artist)}</div><div class="ti"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div>${w.location_text?`<div class="lo">${esc(w.location_text)}</div>`:""}</div></button>`; }
+  <div class="tx"><div class="ar">${esc(w.artist)}</div><div class="ti"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div>${w.location_text?`<div class="lo">${esc(w.location_text)}</div>`:""}${condLast(w)?`<div class="cr">${esc(t("condLine"))} · ${esc(fmtDate(condLast(w).date))}</div>`:""}</div></button>`; }
+/* Condition reports shared by Legacy Shaper (SQL 022, 15 Oct 2026): artworks.condition_reports (newest first) + documents
+   condition_report (PDF) / condition_photo (close-ups). Opened, shared or downloaded from the work's page. */
+const condList=w=>(Array.isArray(w.condition_reports)?w.condition_reports:[]).filter(r=>r&&typeof r==="object");
+const condLast=w=>condList(w).find(r=>r.date);
+const docByPath=p=>((S.data&&S.data.docs)||[]).find(d=>d.storage_path===p);
+function condHtml(w){ const rs=condList(w); if(!rs.length) return "";
+  return `<div class="sec" id="dCond"><h4>${esc(t("condReports"))}</h4>${rs.map(r=>{ const st=(t("condSt")||{})[r.condition]||"";
+    const by=[r.by,r.company,r.place].filter(Boolean).join(" · ");
+    const files=(r.files||[]).map(f=>docByPath("files/"+f.id)).filter(Boolean), photos=(r.photos||[]).map(f=>Object.assign({cap:f.caption||""},docByPath("files/"+f.id)||{})).filter(d=>d.id);
+    return `<div class="cnd"><div class="cnd-h"><span class="cnd-d">${esc(r.date?fmtDate(r.date):"—")}</span>${st?`<span class="cnd-st">${esc(st)}</span>`:""}</div>
+      ${by?`<div class="cnd-by">${esc(by)}</div>`:""}${r.notes?`<p class="cnd-n">${esc(r.notes)}</p>`:""}
+      ${files.map(d=>`<div class="cnd-acts"><span class="nm">${esc(d.name)}</span><button data-cndopen="${esc(d.id)}">${esc(t("condOpen"))}</button><button data-cndshare="${esc(d.id)}">${esc(t("condShare"))}</button><button data-doc="${esc(d.id)}">${esc(t("download"))} ↓</button></div>`).join("")}
+      ${photos.length?`<div class="cnd-ph">${photos.map(d=>`<button data-cndph="${esc(d.id)}" aria-label="${esc(d.cap||t("condPhotos"))}"><img alt="${esc(d.cap||"")}" data-cndimg="${esc(d.id)}"></button>`).join("")}</div>`:""}</div>`; }).join("")}</div>`; }
+async function docBlob(id){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return null;
+  let blob=await idb.get("doc:"+id); if(blob) return blob;
+  const {data,error}=await sb.storage.from(CFG.bucket).download(doc.storage_path); if(error) throw error; idb.set("doc:"+id,data); return data; }
+async function condOpen(id,share){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return; logAccess("download",id);
+  let blob; try{ blob=await docBlob(id); }catch(e){ toast(t("docErr")); return; } if(!blob) return;
+  if(share){ const file=new File([blob],doc.name||"condition-report.pdf",{type:blob.type||doc.mime||"application/pdf"});
+    if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:doc.name}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+    return downloadDoc(id); }
+  const url=URL.createObjectURL(blob); const win=window.open(url,"_blank"); if(!win) return downloadDoc(id); setTimeout(()=>URL.revokeObjectURL(url),60000); }
+function condBind(d){
+  d.querySelectorAll("[data-cndopen]").forEach(b=>b.onclick=()=>condOpen(b.dataset.cndopen,false));
+  d.querySelectorAll("[data-cndshare]").forEach(b=>b.onclick=()=>condOpen(b.dataset.cndshare,true));
+  d.querySelectorAll("img[data-cndimg]").forEach(async im=>{ try{ const b=await docBlob(im.dataset.cndimg); if(b) im.src=URL.createObjectURL(b); }catch(e){} });
+  d.querySelectorAll("[data-cndph]").forEach(b=>b.onclick=async()=>{ const id=b.dataset.cndph, doc=((S.data&&S.data.docs)||[]).find(x=>x.id===id); let blob; try{ blob=await docBlob(id); }catch(e){ toast(t("docErr")); return; }
+    logAccess("download",id); const u=URL.createObjectURL(blob), lb=document.createElement("div"); lb.className="cndlb"; lb.setAttribute("role","dialog");
+    lb.innerHTML=`<img src="${u}" alt="">${doc&&doc.name?`<p>${esc(doc.name)}</p>`:""}<button>${esc(t("close"))}</button>`; document.body.appendChild(lb);
+    lb.onclick=()=>{ lb.remove(); URL.revokeObjectURL(u); }; }); }
 
 function viewOverview(){
   const w=works(); const locs=[...new Set(w.map(x=>x.location_text).filter(Boolean))];
@@ -874,7 +921,7 @@ function viewExpenses(){
 }
 function docLine(d){ const w=d.artwork_id&&workById(d.artwork_id);
   return `<button class="doc" data-doc="${esc(d.id)}"><div><b style="font-weight:500">${esc(d.name)}</b><br><span>${w?`${esc(w.artist)}, ${esc(w.title)} · `:""}${esc(fmtDate(d.created_at))}</span></div><span>${esc(t("download"))} ↓</span></button>`; }
-function viewDocs(){ const docs=(S.data&&S.data.docs)||[]; return docs.length?`<section class="block" style="padding:12px">${docs.map(docLine).join("")}</section>`:`<div class="empty">${esc(t("noDocs"))}</div>`; }
+function viewDocs(){ const docs=((S.data&&S.data.docs)||[]).filter(d=>d.kind!=="condition_photo"); return docs.length?`<section class="block" style="padding:12px">${docs.map(docLine).join("")}</section>`:`<div class="empty">${esc(t("noDocs"))}</div>`; }
 function bindMain(){
   const m=$("#main");
   m.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>workTap(b.dataset.w));
@@ -946,7 +993,7 @@ async function openWork(id,keep){
   const w=workById(id); if(!w) return; S.openId=id; logAccess("open_work",id);
   const views=((S.data.views)||[]).filter(v=>v.artwork_id===id).sort((a,b)=>(a.sort||0)-(b.sort||0)||String(a.created_at).localeCompare(String(b.created_at)));
   const exps=((S.data.expenses)||[]).filter(e=>e.artwork_id===id);
-  const allDocs=((S.data.docs)||[]).filter(d=>d.artwork_id===id), crDocs=allDocs.filter(d=>d.kind==="crating"), docs=allDocs.filter(d=>d.kind!=="crating");
+  const allDocs=((S.data.docs)||[]).filter(d=>d.artwork_id===id), crDocs=allDocs.filter(d=>d.kind==="crating"), docs=allDocs.filter(d=>d.kind!=="crating"&&d.kind!=="condition_report"&&d.kind!=="condition_photo");
   const list=filteredWorks().length?filteredWorks():works(); const idx=list.findIndex(x=>x.id===id);
   const acq=[w.acquisition_date?fmtDate(w.acquisition_date):"", w.acquisition_price!=null?fmtMoney(w.acquisition_price,w.acquisition_currency):"", w.acquisition_source||""].filter(Boolean).map(esc).join("\n");
   const ins=w.insured_value!=null?esc(fmtMoney(w.insured_value,w.insured_currency)):"";
@@ -967,6 +1014,7 @@ async function openWork(id,keep){
         ${fact("ownership",esc(ownershipLine(w)))}${fact("location",loc)}${fact("acquisition",acq)}${fact("insurance",ins)}${fact("condition",esc(w.condition))}
         ${fact("provenance",esc(w.provenance))}${fact("exhibitions",esc(w.exhibitions))}${fact("literature",esc(w.literature))}${fact("notes",esc(w.notes))}${fact("ref",esc(w.ref))}</dl>
       <div class="acts">${canViewAtScale(w)?`<button id="dRoom">${esc(t("atScale"))}</button>`:""}<button id="dPdf">${esc(t("sheetPdf"))}</button><button class="alt" id="dImgDl">${esc(t("image"))}</button>${C.ok?`<button class="alt" id="dAsk">${esc(t("askWork"))}</button>`:""}</div>
+      ${condHtml(w)}
       ${exps.length?`<div class="sec"><h4>${esc(t("linkedExp"))}</h4><section class="block">${exps.map(e=>expLine(e,"page")).join("")}<div class="tot"><span>${esc(t("total"))}</span><span>${esc(curLine(sumByCur(exps,"amount","currency")))}</span></div></section></div>`:""}
       ${cratingHtml(w,crDocs)}
       ${docs.length?`<div class="sec"><h4>${esc(t("linkedDocs"))}</h4>${docs.map(docLine).join("")}</div>`:""}
@@ -975,6 +1023,7 @@ async function openWork(id,keep){
   if($("#dPrev")) $("#dPrev").onclick=()=>openWork(list[idx-1].id);
   if($("#dNext")) $("#dNext").onclick=()=>openWork(list[idx+1].id);
   d.querySelectorAll("[data-doc]").forEach(b=>b.onclick=()=>downloadDoc(b.dataset.doc));
+  condBind(d);
   let current=views[0]&&views[0].id, onScale=false;
   const setStage=p=>{ const img=$("#dImg"); if(img) img.src=p; else $("#dStage").innerHTML=`<img id="dImg" src="${p}" alt="">`; };
   const show=async vid=>{ current=vid; onScale=false; const sb=$("#dScBar"); if(sb) sb.hidden=true; const st=$("#dScTile"); if(st) st.classList.remove("on");
@@ -1869,5 +1918,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v8adf8a17</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vc56a03a7</div>
 </body></html>
