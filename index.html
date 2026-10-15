@@ -1,6 +1,25 @@
 <!doctype html>
 <html lang="en"><head>
 <meta charset="utf-8">
+<style id="lsBootCss">html:not(.ls-ready){background:#1B3924}html:not(.ls-ready) body{visibility:hidden}
+#lsBoot{position:fixed;inset:0;z-index:100000;background:#1B3924;color:#F4F0E6;display:flex;align-items:center;justify-content:center;padding:28px;text-align:center;font:15px/1.55 -apple-system,"Hanken Grotesk",sans-serif}
+#lsBoot div{max-width:340px;display:flex;flex-direction:column;gap:18px;align-items:center}
+#lsBoot button{font:inherit;font-weight:600;background:#C4A052;color:#1B3924;border:0;border-radius:12px;padding:13px 30px;cursor:pointer}</style>
+<script>/* boot guard (tools/boot_guard.py): never show a half-received page */
+(function(){var K="ls-boot-try",done=false;
+function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){return null;}}
+window.__lsBootOk=function(){if(done)return;done=true;window.__LS_READY=1;document.documentElement.classList.add("ls-ready");ss(K,null);
+  try{var u=new URL(location.href);if(u.searchParams.has("lsr")){u.searchParams.delete("lsr");history.replaceState(history.state,"",u.pathname+u.search+u.hash);}}catch(e){}};
+function retry(){var u=new URL(location.href);u.searchParams.set("lsr",Date.now().toString(36));location.replace(u.pathname+u.search+u.hash);}
+function fail(){if(done||window.__LS_READY)return;done=true;var n=+(ss(K)||0);
+  if(n<2){ss(K,String(n+1));retry();return;}
+  ss(K,null);var fr=/^fr/i.test(navigator.language||"")||document.documentElement.lang==="fr";
+  var b=document.createElement("div");b.id="lsBoot";
+  b.innerHTML="<div><p>"+(fr?"La connexion est un peu lente : l’ouverture n’a pas pu se terminer.":"The connection is a little slow: opening could not finish.")+"</p><button type=button>"+(fr?"Réessayer":"Try again")+"</button></div>";
+  b.querySelector("button").onclick=function(){ss(K,null);retry();};document.documentElement.appendChild(b);}
+document.addEventListener("DOMContentLoaded",function(){if(!window.__LS_READY)fail();});
+setTimeout(function(){if(!window.__LS_READY&&document.readyState==="loading")fail();},45000);
+})();</script>
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#1B3924">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1975,5 +1994,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vf9f5e043</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v727b18e4</div>
+<script>window.__lsBootOk&&window.__lsBootOk()</script>
+<!--ls-end-->
 </body></html>
