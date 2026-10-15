@@ -316,6 +316,7 @@ body.selecting #main{padding-bottom:110px}
 #chat .note{font-size:12px;color:var(--gold-text);min-height:0;margin:6px 2px 0}
 
 /* ---------- print: inventory sheet ---------- */
+.cfstage{position:fixed;left:-12000px;top:0;pointer-events:none}.cfiche{width:794px;height:1123px;background:#fff;color:#000;display:flex;flex-direction:column;align-items:center;font:16px/1.22 "Helvetica Neue",Arial,sans-serif;text-align:center}.cfiche .cfl{width:220px;height:auto;margin-top:56px}.cfiche .cfbox{margin-top:44px;width:450px;height:460px;display:flex;align-items:center;justify-content:center}.cfiche .cfbox img{max-width:450px;max-height:460px;width:auto;height:auto;display:block}.cfiche .cft{margin-top:34px;display:flex;flex-direction:column;gap:1px;max-width:560px}.cfiche .cft b{font-weight:700}.cfiche .cfc{margin-top:12px;display:flex;flex-direction:column;gap:1px}
 #print{display:none}
 /* sheet layout lives outside @media print so the page can measure it before printing (#print stays hidden on screen) */
 #print{color:#16241A;font-family:var(--sans);font-size:10.5pt}
@@ -387,7 +388,7 @@ const I18N={
    artist:"Artist",title:"Title",date:"Date",medium:"Medium",dims:"Dimensions",dimsFramed:"Framed",edition:"Edition",unique:"Unique work",ap:"Artist's proof",
    ownership:"Ownership",location:"Location",since:"since",acquisition:"Acquisition",insurance:"Insurance",condition:"Condition",provenance:"Provenance",
    exhibitions:"Exhibitions",literature:"Literature",notes:"Notes",ref:"Inventory no.",
-   back:"Back",sheetPdf:"Inventory sheet (PDF)",select:"Select",selCancel:"Cancel",selAll:"Select all",selNone:"Clear",selHint:"Tap the works to include",selN:"{n} works selected · one page each, in a single PDF",selN1:"1 work selected · one page in the PDF",sheetsPdf:"Inventory sheets (PDF)",image:"Download image",prev:"Previous",next:"Next",
+   back:"Back",sheetPdf:"Inventory sheet (PDF)",shareSheet:"Share the sheet",shareDl:"Sheet downloaded: attach it to your email",shareErr:"The sheet could not be created",select:"Select",selCancel:"Cancel",selAll:"Select all",selNone:"Clear",selHint:"Tap the works to include",selN:"{n} works selected · one page each, in a single PDF",selN1:"1 work selected · one page in the PDF",sheetsPdf:"Inventory sheets (PDF)",image:"Download image",prev:"Previous",next:"Next",
    crating:"Packing & crate",crStatus:"Status",crType:"Packing",crDims:"Exterior dimensions",crWeight:"Gross weight",crWhere:"Crate",crHandling:"Handling",crOrient:"Transport",crRef:"Crate marking",crFeat:"Specifications",crPkg:"Package",crPhotos:"Photos and packing list",
    crS:{none:"Not packed",packed:"Packed",todo:"Crate to be made",making:"Crate being made"},
    crT:{soft:"Soft packing",tframe:"T-frame",travel:"Travel frame",museum:"International museum crate",slatted:"Slatted crate",climate:"Climate-controlled crate",solander:"Solander box (works on paper)",sculpture:"Sculpture / plinth crate"},
@@ -449,7 +450,7 @@ const I18N={
    artist:"Artiste",title:"Titre",date:"Date",medium:"Technique",dims:"Dimensions",dimsFramed:"Avec cadre",edition:"Édition",unique:"Œuvre unique",ap:"Épreuve d’artiste",
    ownership:"Propriété",location:"Localisation",since:"depuis le",acquisition:"Acquisition",insurance:"Assurance",condition:"État",provenance:"Provenance",
    exhibitions:"Expositions",literature:"Bibliographie",notes:"Notes",ref:"N° d’inventaire",
-   back:"Retour",sheetPdf:"Fiche d’inventaire (PDF)",select:"Sélectionner",selCancel:"Annuler",selAll:"Tout sélectionner",selNone:"Tout désélectionner",selHint:"Touchez les œuvres à inclure",selN:"{n} œuvres sélectionnées · une page chacune, dans un seul PDF",selN1:"1 œuvre sélectionnée · une page dans le PDF",sheetsPdf:"Fiches d’inventaire (PDF)",image:"Télécharger l’image",prev:"Précédente",next:"Suivante",
+   back:"Retour",sheetPdf:"Fiche d’inventaire (PDF)",shareSheet:"Partager la fiche",shareDl:"Fiche téléchargée : joignez-la à votre e-mail",shareErr:"La fiche n’a pas pu être créée",select:"Sélectionner",selCancel:"Annuler",selAll:"Tout sélectionner",selNone:"Tout désélectionner",selHint:"Touchez les œuvres à inclure",selN:"{n} œuvres sélectionnées · une page chacune, dans un seul PDF",selN1:"1 œuvre sélectionnée · une page dans le PDF",sheetsPdf:"Fiches d’inventaire (PDF)",image:"Télécharger l’image",prev:"Précédente",next:"Suivante",
    crating:"Emballage & caisse",crStatus:"État",crType:"Emballage",crDims:"Dimensions extérieures",crWeight:"Poids brut",crWhere:"Caisse",crHandling:"Manutention",crOrient:"Transport",crRef:"Marquage de la caisse",crFeat:"Caractéristiques",crPkg:"Colis",crPhotos:"Photos et fiche de colisage",
    crS:{none:"Sans emballage",packed:"Emballée",todo:"Caisse à fabriquer",making:"Caisse en fabrication"},
    crT:{soft:"Soft packing",tframe:"T-frame",travel:"Travel frame",museum:"Caisse internationale (musée)",slatted:"Caisse claire-voie",climate:"Caisse climatique",solander:"Boîte Solander (papier)",sculpture:"Caisse sculpture / socle"},
@@ -1034,7 +1035,7 @@ async function openWork(id,keep){
       <dl class="facts">${fact("medium",esc(w.medium))}${fact("dims",esc(dimsLine(w.dimensions)))}${fact("dimsFramed",esc(dimsLine(w.dimensions_framed)))}${fact("edition",esc(editionLine(w)))}
         ${fact("ownership",esc(ownershipLine(w)))}${fact("location",loc)}${fact("acquisition",acq)}${fact("insurance",ins)}${fact("condition",esc(w.condition))}
         ${fact("provenance",esc(w.provenance))}${fact("exhibitions",esc(w.exhibitions))}${fact("literature",esc(w.literature))}${fact("notes",esc(w.notes))}${fact("ref",esc(w.ref))}</dl>
-      <div class="acts">${canViewAtScale(w)?`<button id="dRoom">${esc(t("atScale"))}</button>`:""}<button id="dPdf">${esc(t("sheetPdf"))}</button><button class="alt" id="dImgDl">${esc(t("image"))}</button>${C.ok?`<button class="alt" id="dAsk">${esc(t("askWork"))}</button>`:""}</div>
+      <div class="acts">${canViewAtScale(w)?`<button id="dRoom">${esc(t("atScale"))}</button>`:""}<button id="dPdf">${esc(t("sheetPdf"))}</button><button id="dShare">${esc(t("shareSheet"))}</button><button class="alt" id="dImgDl">${esc(t("image"))}</button>${C.ok?`<button class="alt" id="dAsk">${esc(t("askWork"))}</button>`:""}</div>
       ${purchHtml(w)}
       ${condHtml(w)}
       ${exps.length?`<div class="sec"><h4>${esc(t("linkedExp"))}</h4><section class="block">${exps.map(e=>expLine(e,"page")).join("")}<div class="tot"><span>${esc(t("total"))}</span><span>${esc(curLine(sumByCur(exps,"amount","currency")))}</span></div></section></div>`:""}
@@ -1073,6 +1074,7 @@ async function openWork(id,keep){
   d.querySelectorAll("[data-vt]").forEach(async im=>{ const p=await viewPhoto(im.dataset.vt); if(p) im.src=p; });
   if($("#dAsk")) $("#dAsk").onclick=()=>openChat(id);
   if($("#dRoom")) $("#dRoom").onclick=async()=>openRoom(w, current?await viewPhoto(current):thumbOf(w));
+  $("#dShare").onclick=async()=>shareSheet(w, current?await viewPhoto(current):thumbOf(w));
   $("#dPdf").onclick=async()=>printSheet(w, current?await viewPhoto(current):thumbOf(w), (scOK&&scalePdfGet(id))?await scaleURL():"");
   $("#dImgDl").onclick=async()=>{ const p=onScale?await scaleURL():((current&&await viewPhoto(current))||thumbOf(w)); if(!p) return; const a=document.createElement("a"); a.href=p; a.download=fileBase(w)+(onScale?" - "+t("scaleTile"):"")+".jpg"; document.body.appendChild(a); a.click(); a.remove(); };
 }
@@ -1110,6 +1112,39 @@ function sheetHTML(w,img,scaleImg){
     <div class="pa">${esc(w.artist)}</div><div class="pt"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div>
     <table>${rows.map(r=>`<tr><td>${esc(t(r[0]))}</td><td style="white-space:pre-line">${esc(r[1])}</td></tr>`).join("")}</table>
     <div class="pf">${esc(S.data.coll.name)} · ${esc(t("sheetFoot"))} · ${esc(fmtDate(new Date().toISOString()))}</div>${scaleImg?`<div class="pscale"><img src="${scaleImg}" alt=""><div>${esc(w.artist)}${w.title?", "+esc(w.title):""}${w.year?", "+esc(w.year):""} · ${esc(t("atScale"))}</div></div>`:""}`;
+}
+/* « Partager la fiche » (15 Oct 2026): the collector shares a classic Legacy Shaper technical sheet — artist, title, year,
+   medium, dimensions (cm + in), framed dimensions, edition — and nothing else (never location, value, owner, condition,
+   collection name). PDF made on the device (jsPDF + html2canvas, loaded on first use and kept offline by the service
+   worker), sent through the iPhone / Mac share sheet, otherwise downloaded; without the PDF tools, the print dialog. */
+const PDF_LIBS=["https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js","https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"];
+function loadScript(u){ return new Promise((res,rej)=>{ const s=document.createElement("script"); s.src=u; s.onload=res; s.onerror=rej; document.head.appendChild(s); }); }
+async function pdfLibs(){ if(window.jspdf&&window.html2canvas) return true;
+  try{ await Promise.all(PDF_LIBS.map(loadScript)); }catch(e){} return !!(window.jspdf&&window.html2canvas); }
+function classicRows(w){ return [["medium",w.medium],["dims",dimsLine(w.dimensions)],["dimsFramed",dimsLine(w.dimensions_framed)],["edition",editionLine(w)]].filter(r=>r[1]); }
+function classicFicheHTML(w,img){
+  const rows=classicRows(w).map(r=>r[0]==="dimsFramed"?String(r[1]).split("\n").map(x=>`Framed: ${x}`).join("\n"):r[1]);
+  return `<div class="cfiche"><img class="cfl" src="${LOGO_GREEN}" alt="Legacy Shaper">${img?`<div class="cfbox"><img src="${img}" alt=""></div>`:""}
+    <div class="cft"><b>${esc(w.artist||"")}</b><span><i>${esc(w.title||"Untitled")}</i>${w.year?", "+esc(w.year):""}</span>${rows.map(x=>`<span style="white-space:pre-line">${esc(x)}</span>`).join("")}</div>
+    <div class="cfc"><span>Copyright: Copyright The Artist</span><span>Courtesy of Legacy Shaper</span></div></div>`; }
+async function shareSheet(w,img){
+  const b=$("#dShare"); if(b) b.disabled=true; const name=fileBase(w)+" - Legacy Shaper.pdf";
+  try{
+    if(!await pdfLibs()){ await printHTML(`<div class="psheet"><img class="pl" src="${LOGO_GREEN}" alt="Legacy Shaper">${img?`<img class="pimg" src="${img}" alt="">`:""}<div class="pa">${esc(w.artist)}</div><div class="pt"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div><table>${classicRows(w).map(r=>`<tr><td>${esc(t(r[0]))}</td><td style="white-space:pre-line">${esc(r[1])}</td></tr>`).join("")}</table><div class="pf">Copyright The Artist · Courtesy of Legacy Shaper</div></div>`, name.replace(/\.pdf$/,"")); return; }
+    const st=document.createElement("div"); st.className="cfstage"; st.setAttribute("aria-hidden","true"); st.innerHTML=classicFicheHTML(w,img); document.body.appendChild(st);
+    const el=st.firstElementChild;
+    try{ if(document.fonts&&document.fonts.ready) await document.fonts.ready;
+      await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; })));
+      window.__lastShareSheet={name,text:el.innerText};
+      const canvas=await html2canvas(el,{scale:2,backgroundColor:"#ffffff",logging:false,width:794,windowWidth:794});
+      const pdf=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true}); const PW=pdf.internal.pageSize.getWidth(), PH=pdf.internal.pageSize.getHeight();
+      pdf.addImage(canvas.toDataURL("image/jpeg",0.93),"JPEG",0,0,PW,PH); pdf.setProperties({title:`${w.artist||""} — ${w.title||""}`,author:"Legacy Shaper",creator:"Legacy Shaper"});
+      const blob=pdf.output("blob"), file=new File([blob],name,{type:"application/pdf"});
+      if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:name.replace(/\.pdf$/,"")}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
+      const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),4000); toast(t("shareDl"));
+    } finally { st.remove(); }
+  }catch(e){ toast(t("shareErr")); }
+  finally{ if(b) b.disabled=false; }
 }
 async function downloadDoc(id){
   const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return; logAccess("download",id);
@@ -1940,5 +1975,5 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vd461ea0a</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">vf9f5e043</div>
 </body></html>
