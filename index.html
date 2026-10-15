@@ -6,12 +6,32 @@
 #lsBoot div{max-width:340px;display:flex;flex-direction:column;gap:18px;align-items:center}
 #lsBoot button{font:inherit;font-weight:600;background:#C4A052;color:#1B3924;border:0;border-radius:12px;padding:13px 30px;cursor:pointer}</style>
 <script>/* boot guard (tools/boot_guard.py): never show a half-received page */
+/* error journal (SQL 024): every screen error and every unfinished opening is queued on the device (localStorage "ls-errq",
+   same error counted, not repeated) and sent by the app once signed in (public.log_app_errors), so Claude sees it first. */
+(function(){var EQ="ls-errq",APP="client";
+function eq(){try{var a=JSON.parse(localStorage.getItem(EQ)||"[]");return Array.isArray(a)?a:[];}catch(e){return [];}}
+function es(a){try{localStorage.setItem(EQ,JSON.stringify(a.slice(-100)));}catch(e){}}
+function dev(){var u=navigator.userAgent||"",k=/iPhone/.test(u)?"iPhone":/iPad/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1)?"iPad":/Mac/.test(u)?"Mac":/Android/.test(u)?"Android":/Windows/.test(u)?"Windows":"Web",s=false;
+  try{s=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;}catch(e){}return k+(s?" · app":" · web")+" · "+(window.innerWidth||0)+"px";}
+function bt(){var b=document.getElementById("buildTag");return b?b.textContent.trim():"";}
+window.__lsErr=function(kind,msg,src,stack){try{msg=String(msg||"").slice(0,1000);if(!msg)return;var a=eq(),key=kind+"|"+msg+"|"+(src||"");
+  for(var i=a.length-1;i>=0;i--){if(a[i].key===key){a[i].repeats=(a[i].repeats||1)+1;es(a);return;}}
+  a.push({id:(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2,12)),key:key,app:APP,kind:kind,message:msg,
+    source:String(src||"").slice(0,300),stack:String(stack||"").slice(0,4000),page:(location.pathname+location.hash).slice(0,300),device:dev(),build:bt(),at:new Date().toISOString(),repeats:1});es(a);}catch(e){}};
+window.addEventListener("error",function(ev){if(!ev||!ev.message)return;window.__lsErr("error",ev.message,String(ev.filename||"").split("/").pop()+":"+ev.lineno+":"+ev.colno,ev.error&&ev.error.stack);});
+window.addEventListener("unhandledrejection",function(ev){var r=ev&&ev.reason;window.__lsErr("promise",r&&(r.message||r.msg)||String(r),"",r&&r.stack);});
+var busy=false;
+window.__lsErrFlush=async function(sb){if(busy||!sb||navigator.onLine===false)return;var a=eq();if(!a.length)return;busy=true;
+  try{var b=a.slice(0,50).map(function(x){var y=Object.assign({},x);delete y.key;if(!y.build)y.build=bt();return y;});
+    var r=await sb.rpc("log_app_errors",{p_events:b});
+    if(r&&!r.error){var sent={};b.forEach(function(x){sent[x.id]=1;});es(eq().filter(function(x){return !sent[x.id];}));}}catch(e){}finally{busy=false;}};
+})();
 (function(){var K="ls-boot-try",done=false;
 function ss(k,v){try{if(v===undefined)return sessionStorage.getItem(k);if(v===null)sessionStorage.removeItem(k);else sessionStorage.setItem(k,v);}catch(e){return null;}}
 window.__lsBootOk=function(){if(done)return;done=true;window.__LS_READY=1;document.documentElement.classList.add("ls-ready");ss(K,null);
   try{var u=new URL(location.href);if(u.searchParams.has("lsr")){u.searchParams.delete("lsr");history.replaceState(history.state,"",u.pathname+u.search+u.hash);}}catch(e){}};
 function retry(){var u=new URL(location.href);u.searchParams.set("lsr",Date.now().toString(36));location.replace(u.pathname+u.search+u.hash);}
-function fail(){if(done||window.__LS_READY)return;done=true;var n=+(ss(K)||0);
+function fail(){if(done||window.__LS_READY)return;done=true;var n=+(ss(K)||0);try{window.__lsErr("boot","opening could not finish (half page received)",document.readyState);}catch(e){}
   if(n<2){ss(K,String(n+1));retry();return;}
   ss(K,null);var fr=/^fr/i.test(navigator.language||"")||document.documentElement.lang==="fr";
   var b=document.createElement("div");b.id="lsBoot";
@@ -733,9 +753,11 @@ function logAccess(action,obj){ try{ const uid=S&&S.user&&S.user.id; if(!uid) re
   const q=accQ(); q.push({id:accId(),uid,app:"client",action,collection:S.cid||null,object:obj||null,at:new Date().toISOString(),
     offline:navigator.onLine===false||!S.authed,device:accDevice()}); accSave(q);
   accFlush(); }catch(e){} }
+setInterval(()=>{ try{ accFlush(); }catch(e){} },60000);   // queued events and errors leave the device within a minute
 async function accFlush(){
   if(accBusy||!sb||!S||!S.authed||navigator.onLine===false) return;
   const uid=S.user&&S.user.id; if(!uid) return;
+  try{ window.__lsErrFlush&&window.__lsErrFlush(sb); }catch(e){}   // error journal (SQL 024)
   const batch=accQ().filter(e=>e.uid===uid).slice(0,500); if(!batch.length) return;
   accBusy=true;
   let more=false;
@@ -1994,7 +2016,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v727b18e4</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v40277f21</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
