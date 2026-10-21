@@ -443,7 +443,7 @@ const I18N={
    condSt:{excellent:"Excellent condition",good:"Good condition",fair:"Fair condition",watch:"To be monitored",damage:"Damage noted"},
    byYear:"By year",general:"Collection",perWork:"Per work",oneExp:"expense",nExp:"expenses",total:"Total",allYears:"All years",noExp:"No expenses shared for this period.",
    noDocs:"No documents shared yet.",download:"Download",
-   cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",other:"Other services",storage:"Storage",restoration:"Restoration and conservation",framing:"Framing",photo:"Photography",customs:"Customs and duties"},
+   cat:{art:"Acquisition",transport:"Transport",insurance:"Insurance & storage",commission:"Commission",travel:"Travel",meals:"Hospitality",overhead:"Collection management",software:"Software and subscriptions",other:"Other services",storage:"Storage",restoration:"Restoration and conservation",framing:"Framing",photo:"Photography",customs:"Customs and duties"},
    byPlace:"By place",lsInv:"Your Legacy Shaper invoices",invPaid:"Settled",invDue:"To be settled",yourCosts:"Costs of your collection",
    menu:"Menu",signedAs:"Signed in as",refresh:"Refresh now",exportAll:"Download my collection",exportSub:"Inventory spreadsheet and images, in one file",
    termsTitle:"Terms of use",termsIntro:"Before opening the collection, please read the terms for Authorised Users of The Legacy.",termsAccept:"I accept",termsMsg:"Your acceptance could not be recorded. Please check the connection and try again.",
@@ -505,7 +505,7 @@ const I18N={
    condSt:{excellent:"Très bon état",good:"Bon état",fair:"État correct",watch:"À surveiller",damage:"Dommage constaté"},
    byYear:"Par année",general:"Collection",perWork:"Par œuvre",oneExp:"dépense",nExp:"dépenses",total:"Total",allYears:"Toutes les années",noExp:"Aucune dépense partagée sur cette période.",
    noDocs:"Aucun document partagé pour le moment.",download:"Télécharger",
-   cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",other:"Autres prestations",storage:"Stockage",restoration:"Restauration et conservation",framing:"Encadrement",photo:"Photographie",customs:"Douane et taxes"},
+   cat:{art:"Acquisition",transport:"Transport",insurance:"Assurance et stockage",commission:"Commission",travel:"Déplacements",meals:"Réception",overhead:"Gestion de la collection",software:"Abonnements et logiciels",other:"Autres prestations",storage:"Stockage",restoration:"Restauration et conservation",framing:"Encadrement",photo:"Photographie",customs:"Douane et taxes"},
    byPlace:"Par lieu",lsInv:"Vos factures Legacy Shaper",invPaid:"Réglée",invDue:"À régler",yourCosts:"Frais de votre collection",
    menu:"Menu",signedAs:"Connecté en tant que",refresh:"Mettre à jour",exportAll:"Télécharger ma collection",exportSub:"Inventaire au format tableur et images, en un seul fichier",
    termsTitle:"Conditions d’utilisation",termsIntro:"Avant d’ouvrir la collection, merci de prendre connaissance des conditions applicables aux utilisateurs de The Legacy.",termsAccept:"J’accepte",termsMsg:"Votre acceptation n’a pas pu être enregistrée. Merci de vérifier la connexion et de réessayer.",
@@ -725,7 +725,7 @@ const DOC_COLS="id,kind,name,mime,size,storage_path,artwork_id,expense_id,create
 const DEMO_COLL="a0e1d2c3-0000-4000-8000-00000000d3e0";
 const DEMO_INVOICES=[
   {id:"demo-inv-4",number:"LSC-DEMO-04",date:"2026-10-08",due:"2026-11-07",status:"sent",currency:"EUR",client_total:2950,items:[{title:"Fine art transport · Capri to Geneva (winter return)"}]},
-  {id:"demo-inv-3",number:"LSC-DEMO-03",date:"2026-06-12",due:"2026-07-12",status:"paid",currency:"EUR",client_total:3850,items:[{title:"Fine art transport · Geneva Freeport to Lausanne (loan)"}]},
+  {id:"demo-inv-3",number:"LSC-DEMO-03",date:"2026-06-12",due:"2026-07-12",status:"paid",currency:"EUR",client_total:3850,items:[{title:"Fine art transport · Entrepôt sous douane · Genève to Lausanne (loan)"}]},
   {id:"demo-inv-2",number:"LSC-DEMO-02",date:"2026-04-20",due:"2026-05-20",status:"paid",currency:"USD",client_total:8200,items:[{title:"Onboarding of the collection · balance"}]},
   {id:"demo-inv-1",number:"LSC-DEMO-01",date:"2026-03-02",due:"2026-03-02",status:"paid",currency:"USD",client_total:33500,items:[{title:"Onboarding deposit and annual plan, year 1"}]}];
 async function fetchCollection(cid){
@@ -2025,7 +2025,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v5a3dd8c1</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v8e02a0d0</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
