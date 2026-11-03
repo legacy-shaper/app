@@ -117,12 +117,17 @@ img{display:block;max-width:100%}
 .tabs button.on{color:var(--gold);border-bottom-color:var(--gold)}
 /* iPhone: the five sections in a fixed bar at the bottom, all visible at once (nothing to scroll to find) */
 .btabs{display:none}
+.arcintro{margin:4px 0 14px;color:var(--muted,#6b6a5e);font-size:14px}
+.card .sold{display:inline-block;margin-top:6px;font-size:12px;white-space:nowrap;color:#7A5A12;background:#F6EBCF;border:1px solid #D9B76A;border-radius:999px;padding:3px 8px;align-self:flex-start}
+.arcban{border:1.5px solid var(--gold);border-radius:12px;padding:10px 12px;margin:0 0 12px;display:grid;gap:2px}
+.arcban b{font:500 22px/1.2 "Cormorant Garamond",Georgia,serif;color:var(--deep,#1B3924)} .arcban span{font-size:12.5px;color:var(--muted,#6b6a5e)}
 @media (max-width:720px){
   .tabs{display:none}
   .btabs{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));position:fixed;left:0;right:0;bottom:0;z-index:24;background:var(--deep);
     border-top:1px solid rgba(196,160,82,.4);padding:6px 4px calc(6px + var(--safe-b))}
   .btabs button{background:none;border:0;color:#CFC6AE;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 2px;min-height:52px;font-size:11px;letter-spacing:.2px;min-width:0}
   .btabs button span{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .btabs.six{grid-template-columns:repeat(6,minmax(0,1fr))} .btabs.six button{font-size:10.5px}
   .btabs button svg{width:23px;height:23px;flex:none}
   .btabs button.on{color:var(--gold)}
   .btabs button.on span{font-weight:600}
@@ -420,7 +425,9 @@ const I18N={
    neterr:"The connection is not available at the moment. Please try again shortly.",mfaTitle:"Security code",mfaStep:"Step 2 of 2 · email code confirmed ✓",mfaIntro:"Open your authenticator app (Google Authenticator, Authy…) and enter the six-digit code shown for Legacy Shaper. It is not the code received by email, which is already confirmed.",mfaMail:"This eight-digit code is the one from the email: it is already confirmed. Here, enter the six-digit code from your authenticator app.",mfaBad:"This code does not match. Enter the current code from your authenticator app (it changes every 30 seconds).",
    offlineTitle:"Legacy Shaper",offlineIntro:"Your collection is available on this device. The connection will refresh it as soon as possible.",openOffline:"Open my collection",retry:"Try again",
    overview:"Overview",works:"Works",locations:"Locations",expenses:"Expenses",documents:"Documents",
-   tabShort:{overview:"Home",works:"Works",locations:"Places",expenses:"Expenses",documents:"Documents"},
+   tabShort:{overview:"Home",works:"Works",locations:"Places",expenses:"Expenses",documents:"Documents",archives:"Archives"},archives:"Archives",
+   arcIntro:"Works that have left your collection, as they stood until their sale. View only.",arcSold:"Sold on",arcBanner:"Archives · view only · your period of ownership, until the sale",
+   arcSoldLS:"Sold to Legacy Shaper",arcCosts:"Costs paid for this work",arcDocs:"Documents",
    nWorks:"Works",oneWork:"Work",nLoc:"Locations",insured:"Insured value",acq:"Acquisitions",
    search:"Search an artist, a title…",allLoc:"All locations",noWorks:"No work matches this search.",
    live:"Up to date",offline:"Offline · copy of",updated:"Updated",
@@ -482,7 +489,9 @@ const I18N={
    neterr:"La connexion n’est pas disponible pour le moment. Réessayez dans quelques instants.",mfaTitle:"Code de sécurité",mfaStep:"Étape 2 sur 2 · code e-mail validé ✓",mfaIntro:"Ouvrez votre application d’authentification (Google Authenticator, Authy…) et saisissez le code à six chiffres affiché pour Legacy Shaper. Ce n’est pas le code reçu par e-mail, déjà validé.",mfaMail:"Ce code à huit chiffres est celui de l’e-mail : il est déjà validé. Ici, saisissez le code à six chiffres de votre application d’authentification.",mfaBad:"Ce code ne correspond pas. Saisissez le code actuel de votre application d’authentification (il change toutes les 30 secondes).",
    offlineTitle:"Legacy Shaper",offlineIntro:"Votre collection est disponible sur cet appareil. Elle se mettra à jour dès que la connexion reviendra.",openOffline:"Ouvrir ma collection",retry:"Réessayer",
    overview:"Vue d’ensemble",works:"Œuvres",locations:"Localisations",expenses:"Dépenses",documents:"Documents",
-   tabShort:{overview:"Accueil",works:"Œuvres",locations:"Lieux",expenses:"Dépenses",documents:"Documents"},
+   tabShort:{overview:"Accueil",works:"Œuvres",locations:"Lieux",expenses:"Dépenses",documents:"Documents",archives:"Archives"},archives:"Archives",
+   arcIntro:"Les œuvres sorties de votre collection, telles qu’elles étaient jusqu’à leur vente. Lecture seule.",arcSold:"Vendue le",arcBanner:"Archives · lecture seule · votre période, jusqu’à la vente",
+   arcSoldLS:"Vendue à Legacy Shaper",arcCosts:"Frais payés pour cette œuvre",arcDocs:"Documents",
    nWorks:"Œuvres",oneWork:"Œuvre",nLoc:"Localisations",insured:"Valeur assurée",acq:"Acquisitions",
    search:"Rechercher un artiste, un titre…",allLoc:"Toutes les localisations",noWorks:"Aucune œuvre ne correspond à cette recherche.",
    live:"À jour",offline:"Hors ligne · copie du",updated:"Mise à jour",
@@ -546,7 +555,14 @@ document.documentElement.lang=LANG;
 /* ---------------- helpers ---------------- */
 const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-const fmtMoney=(v,cur)=>{ if(v==null||v===""||isNaN(+v)) return ""; try{ return new Intl.NumberFormat(LANG==="fr"?"fr-FR":"en-GB",{style:"currency",currency:cur||"USD",maximumFractionDigits:0}).format(+v); }catch(e){ return (+v).toLocaleString()+" "+(cur||""); } };
+/* Essai « Archives » (Dylan, 03/11/2026, maquette v2 « 1 oui, 2 oui ») : TOUT ce qui suit est éteint par défaut, rien ne change pour un client
+   tant que Dylan n'a pas fait son essai sur l'iPhone ; allumé seulement par ?essai=archives (gardé pour la session de l'onglet). */
+const ARCH=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai"); if(q==="archives"){ sessionStorage.setItem("ls-essai-archives","1"); return true; }
+  if(q==="off"){ sessionStorage.removeItem("ls-essai-archives"); return false; } return sessionStorage.getItem("ls-essai-archives")==="1"; }catch(e){ return false; } })();
+/* un seul format de montant partout (Dylan, 02/11/2026, 4 a étendu) : « 780 000 EUR » en français, « EUR 780,000 » en anglais, espaces insécables */
+const fmtCode=(v,cur)=>{ const n=Math.round(+v), c=cur||"USD", a=String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,LANG==="fr"?"\u00a0":",");
+  return LANG==="fr"?`${n<0?"−":""}${a}\u00a0${c}`:`${c}\u00a0${n<0?"−":""}${a}`; };
+const fmtMoney=(v,cur)=>{ if(v==null||v===""||isNaN(+v)) return ""; if(ARCH) return fmtCode(v,cur); try{ return new Intl.NumberFormat(LANG==="fr"?"fr-FR":"en-GB",{style:"currency",currency:cur||"USD",maximumFractionDigits:0}).format(+v); }catch(e){ return (+v).toLocaleString()+" "+(cur||""); } };
 const fmtDate=d=>{ if(!d) return ""; const x=new Date(String(d).slice(0,10)+"T12:00:00"); if(isNaN(x)) return String(d); return x.toLocaleDateString(LANG==="fr"?"fr-FR":"en-GB",{day:"numeric",month:"long",year:"numeric"}); };
 const fmtStamp=ms=>new Date(ms).toLocaleString(LANG==="fr"?"fr-FR":"en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
 const inches=dim=>{ const nums=String(dim||"").replace(/,/g,".").match(/\d+(\.\d+)?/g); if(!nums||!/cm/i.test(dim||"")) return ""; return nums.map(n=>(Math.round(+n/2.54*10)/10).toLocaleString(LANG==="fr"?"fr-FR":"en-GB",{maximumFractionDigits:1})).join(" × ")+" in"; };
@@ -728,6 +744,25 @@ const DEMO_INVOICES=[
   {id:"demo-inv-3",number:"LSC-DEMO-03",date:"2026-06-12",due:"2026-07-12",status:"paid",currency:"EUR",client_total:3850,items:[{title:"Fine art transport · Entrepôt sous douane · Genève to Lausanne (loan)"}]},
   {id:"demo-inv-2",number:"LSC-DEMO-02",date:"2026-04-20",due:"2026-05-20",status:"paid",currency:"USD",client_total:8200,items:[{title:"Onboarding of the collection · balance"}]},
   {id:"demo-inv-1",number:"LSC-DEMO-01",date:"2026-03-02",due:"2026-03-02",status:"paid",currency:"USD",client_total:33500,items:[{title:"Onboarding deposit and annual plan, year 1"}]}];
+/* Démo, essai « Archives » (maquette v2, corrections a-e de l'auditeur) : une facture Private Sales d'exemple sur une AUTRE œuvre que celles
+   que la démo a vendues (« Red Field II », achetée à Legacy Shaper : prix et date de sa fiche), série unique LSC, date passée ; deux œuvres
+   fictives sorties de la collection (aucune n'est parmi les douze). Jamais le nom de la démo dans ces données : elles sont dans la page de chaque client. Comme DEMO_INVOICES : seulement dans l'app, jamais dans la base ni la comptabilité. */
+const DEMO_INV_SALE={id:"demo-inv-5",number:"LSC-DEMO-05",date:"2025-01-10",due:"2025-01-10",status:"paid",currency:"USD",client_total:168000,items:[{title:"Red Field II"}]};
+const DEMO_ARCHIVES=[
+  {id:"demo-arc-1",artwork_id:"aur-13",sold_at:"2026-10-21",costs:[],files:[],card:{id:"aur-13",artist:"Nadia Karami (b. 1986)",title:"Horizon, Liwa",year:"2020",medium:"Sumi ink on Japanese paper",
+    dimensions:"90 × 140 cm",edition_type:"unique",acquisition_date:"2021-03-09",acquisition_price:60000,acquisition_currency:"USD",
+    acquisition_source:"Primary market",insured_value:80000,insured_currency:"USD",condition:"Excellent",provenance:"The artist\nAcquired from the above",ref:"AUR-013",
+    thumb:"demo/arc-02-t.jpg",views:[{photo:"demo/arc-02.jpg",sort:0}],soldNet:{amount:"72000",currency:"USD"}}},
+  {id:"demo-arc-2",artwork_id:"aur-14",sold_at:"2026-09-14",costs:[],files:[],card:{id:"aur-14",artist:"Yuna Takemori (b. 1984)",title:"Green Field III",year:"2019",medium:"Pure pigment and resin on panel",
+    dimensions:"100 × 100 cm",edition_type:"unique",acquisition_date:"2021-05-20",acquisition_price:150000,acquisition_currency:"USD",
+    acquisition_source:"Primary market",insured_value:190000,insured_currency:"USD",condition:"Very good",provenance:"The artist\nAcquired from the above",ref:"AUR-014",
+    thumb:"demo/arc-01-t.jpg",views:[{photo:"demo/arc-01.jpg",sort:0}]}}];
+/* Archives d'une collection (SQL 040 / 045) : la copie figée de chaque œuvre sortie, sa période seulement (RLS member_read) ; ses fichiers. */
+async function fetchArchives(cid){ try{
+  const {data,error}=await sb.from("artwork_archives").select("id,artwork_id,sold_at,card,costs").eq("collection_id",cid).order("sold_at",{ascending:false}); if(error) throw error;
+  const rows=data||[]; let files=[];
+  if(rows.length){ const r=await sb.from("artwork_archive_files").select("archive_id,kind,name,mime,size,storage_path").in("archive_id",rows.map(a=>a.id)); files=(r&&r.data)||[]; }
+  return rows.map(a=>Object.assign({},a,{files:files.filter(f=>f.archive_id===a.id&&f.kind!=="view")})); }catch(e){ return []; } }
 async function fetchCollection(cid){
   const q=async p=>{ const {data,error}=await p; if(error) throw error; return data||[]; };
   const [coll]=await q(sb.from("collections").select("id,slug,name,subtitle,display_currency,cover_artwork_id").eq("id",cid));
@@ -741,9 +776,12 @@ async function fetchCollection(cid){
   const expenses=await eq(EXP_COLS+",place").catch(()=>eq(EXP_COLS));   // place: SQL 021 (13 Oct 2026); older databases still load
   // Collection Office invoices issued to this collection (SQL 021): never a Legacy Shaper bill, never another collection's
   let invoices=await q(sb.from("invoices").select("id,number,date,due,status,currency,client_total,items").eq("collection_id",cid).order("date",{ascending:false})).catch(()=>[]);
-  if(cid===DEMO_COLL&&!invoices.length) invoices=DEMO_INVOICES;   // demo only: illustrative, never in public.invoices nor in Legacy Shaper's accounts
+  if(cid===DEMO_COLL&&!invoices.length) invoices=ARCH?[...DEMO_INVOICES,DEMO_INV_SALE]:DEMO_INVOICES;   // demo only: illustrative, never in public.invoices nor in Legacy Shaper's accounts
+  let archives=ARCH?await fetchArchives(cid):[];   // essai « Archives » seulement
+  if(ARCH&&cid===DEMO_COLL&&!archives.length) archives=DEMO_ARCHIVES;
   const docs=await q(sb.from("documents").select(DOC_COLS).eq("collection_id",cid).eq("visible_to_client",true).order("created_at",{ascending:false}));
-  return { coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs, invoices };
+  if(ARCH&&cid===DEMO_COLL) works.forEach(w=>{ if(w.id==="aur-12") w.acquisition_source="Legacy Shaper"; });   // démo : « Red Field II » achetée à Legacy Shaper (facture LSC-DEMO-05)
+  return Object.assign({ coll:coll||S.collections.find(c=>c.id===cid)||{id:cid,name:""}, works, views, expenses, docs, invoices }, ARCH?{archives}:{});
 }
 /* Connection journal (SQL 008 + 010: public.log_events → audit.access_log, append-only). Every opening of the app, sign-out,
    collection opened, work viewed, document downloaded and export is recorded, ONLINE AND OFFLINE: each event is first written
@@ -790,7 +828,7 @@ async function refresh(silent){
   if(!S.cid||!S.user||navigator.onLine===false) return;
   try{ const data=await fetchCollection(S.cid); const changed=JSON.stringify(data)!==JSON.stringify(S.data);
     S.data=data; S.stamp=Date.now(); S.online=true; await idb.set(`snap:${S.user.id}:${S.cid}`,{at:S.stamp,data});
-    if(changed){ render(); if(S.openId) openWork(S.openId,true); prefetchPhotos(); } else renderStatus();
+    if(changed){ render(); if(S.openId) openWork(S.openId,true); else if(S.arcOpen) openArchive(S.arcOpen,true); prefetchPhotos(); } else renderStatus();
     if(!silent) toast(t("live"));
     chatProbe(); accFlush();
   }catch(e){ if(e&&e.revoked){ await accessWithdrawn(); return; } S.online=false; renderStatus(); }
@@ -822,12 +860,15 @@ async function openFromCache(){ const c=await lastCopy(); if(!c){ gateOffline(fa
 
 /* ---------------- shell ---------------- */
 const TABS=["overview","works","locations","expenses","documents"];
+const archives=()=>(ARCH&&S.data&&S.data.archives)||[];
+const tabsNow=()=>archives().length?[...TABS,"archives"]:TABS;
 const TAB_ICON={
   overview:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M4 11l8-6.5 8 6.5V20h-5.5v-5.5h-5V20H4z"/></svg>',
   works:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3.5" y="4.5" width="17" height="15" rx="1"/><rect x="7" y="8" width="10" height="8"/></svg>',
   locations:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>',
   expenses:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>',
-  documents:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4M9.5 12h6M9.5 15.5h6"/></svg>'};
+  documents:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4M9.5 12h6M9.5 15.5h6"/></svg>',
+  archives:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4"/><path d="M5 8.5V19.5h14V8.5M10 12h4"/></svg>'};
 function showApp(){ gate.hidden=true; gate.innerHTML=""; $("#app").hidden=false; $("#topLogo").src=LOGO_H; render(); }
 /* The home-screen / Dock name follows the open collection: the icon carries the Legacy Shaper logo,
    the label underneath carries the collection ("The Example Collection" -> "Example"). */
@@ -859,8 +900,10 @@ function render(){
   $("#collName").textContent=d.coll.name||"";
   $("#collSub").textContent=d.coll.subtitle||"Collection Office";
   renderPreview();
-  $("#tabs").innerHTML=TABS.map(k=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${esc(t(k))}</button>`).join("");
-  $("#btabs").innerHTML=TABS.map(k=>`<button data-bt="${k}" class="${S.tab===k?"on":""}" ${S.tab===k?'aria-current="page"':""}>${TAB_ICON[k]}<span>${esc(t("tabShort")[k])}</span></button>`).join("");
+  if(S.tab==="archives"&&!archives().length) S.tab="overview";
+  const TB=tabsNow(); $("#btabs").classList.toggle("six",TB.length>5);
+  $("#tabs").innerHTML=TB.map(k=>`<button data-t="${k}" class="${S.tab===k?"on":""}">${esc(t(k))}</button>`).join("");
+  $("#btabs").innerHTML=TB.map(k=>`<button data-bt="${k}" class="${S.tab===k?"on":""}" ${S.tab===k?'aria-current="page"':""}>${TAB_ICON[k]}<span>${esc(t("tabShort")[k])}</span></button>`).join("");
   document.querySelectorAll("#tabs button,#btabs button").forEach(b=>b.onclick=()=>{ S.tab=b.dataset.t||b.dataset.bt; S.sel=null; window.scrollTo(0,0); render(); });
   renderStatus();
   const m=$("#main");
@@ -868,6 +911,7 @@ function render(){
   else if(S.tab==="works") m.innerHTML=viewWorks();
   else if(S.tab==="locations") m.innerHTML=viewLocations();
   else if(S.tab==="expenses") m.innerHTML=viewExpenses();
+  else if(S.tab==="archives") m.innerHTML=viewArchives();
   else m.innerHTML=viewDocs();
   bindMain();
 }
@@ -997,6 +1041,7 @@ function viewDocs(){ const docs=((S.data&&S.data.docs)||[]).filter(d=>d.kind!=="
 function bindMain(){
   const m=$("#main");
   m.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>workTap(b.dataset.w));
+  m.querySelectorAll("[data-arc]").forEach(b=>b.onclick=()=>openArchive(b.dataset.arc));
   m.querySelectorAll("[data-goto]").forEach(b=>b.onclick=()=>{ S.tab=b.dataset.goto; window.scrollTo(0,0); render(); });
   m.querySelectorAll("[data-y]").forEach(b=>b.onclick=()=>{ S.year=b.dataset.y; render(); });
   m.querySelectorAll("[data-doc]").forEach(b=>b.onclick=()=>downloadDoc(b.dataset.doc));
@@ -1128,7 +1173,40 @@ async function openWork(id,keep){
   $("#dPdf").onclick=async()=>printSheet(w, current?await viewPhoto(current):thumbOf(w), (scOK&&scalePdfGet(id))?await scaleURL():"");
   $("#dImgDl").onclick=async()=>{ const p=onScale?await scaleURL():((current&&await viewPhoto(current))||thumbOf(w)); if(!p) return; const a=document.createElement("a"); a.href=p; a.download=fileBase(w)+(onScale?" - "+t("scaleTile"):"")+".jpg"; document.body.appendChild(a); a.click(); a.remove(); };
 }
-function closeWork(){ S.openId=null; const d=$("#detail"); d.hidden=true; d.innerHTML=""; document.body.style.overflow=""; }
+/* Onglet « Archives » (essai) : une carte par œuvre sortie, sa photo, « Vendue le JJ/MM/AAAA » ; fiche en lecture seule, sa période seulement :
+   ni localisation, ni « Voir à l'échelle », ni « Partager la fiche », ni « Une question » ; jamais le prix de revente, l'acheteur, la marge ni les offres
+   (la base ne les met jamais dans la copie figée). « Vendue à Legacy Shaper » seulement après une vente sous mandat (soldNet, SQL 045). */
+const arcDate=d=>{ const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})/); if(!m) return ""; return LANG==="fr"?`${m[3]}/${m[2]}/${m[1]}`:fmtDate(d); };
+const arcThumb=a=>{ const c=a.card||{}; const v=(Array.isArray(c.views)?c.views:[]).slice().sort((x,y)=>(x.sort||0)-(y.sort||0)).find(x=>x&&x.photo); return c.thumb||(v&&v.photo)||""; };
+const arcPhoto=a=>{ const c=a.card||{}; const v=(Array.isArray(c.views)?c.views:[]).slice().sort((x,y)=>(x.sort||0)-(y.sort||0)).find(x=>x&&x.photo); return (v&&v.photo)||c.thumb||""; };
+function viewArchives(){ const A=archives().slice().sort((x,y)=>String(y.sold_at).localeCompare(String(x.sold_at)));
+  return `<p class="arcintro" id="arcIntro">${esc(t("arcIntro"))}</p><div class="grid" id="arcGrid">${A.map(a=>{ const c=a.card||{};
+    return `<button class="card" data-arc="${esc(a.id)}"><div class="ph">${arcThumb(a)?`<img loading="lazy" src="${esc(arcThumb(a))}" alt="">`:""}</div>
+      <div class="tx"><div class="ar">${esc(c.artist)}</div><div class="ti"><i>${esc(c.title)}</i>${c.year?`, ${esc(c.year)}`:""}</div><span class="sold">${esc(t("arcSold"))} ${esc(arcDate(a.sold_at))}</span></div></button>`; }).join("")}</div>`; }
+function openArchive(id,keep){ const a=archives().find(x=>x.id===id); if(!a) return; const w=a.card||{}; S.arcOpen=id; S.openId=null; logAccess("open_work",a.artwork_id);
+  const acq=[w.acquisition_date?fmtDate(w.acquisition_date):"", w.acquisition_price!=null&&w.acquisition_price!==""?fmtMoney(w.acquisition_price,w.acquisition_currency):"", w.acquisition_source||""].filter(Boolean).map(esc).join("\n");
+  const ins=w.insured_value!=null&&w.insured_value!==""?esc(fmtMoney(w.insured_value,w.insured_currency)):"";
+  const net=w.soldNet&&w.soldNet.amount?esc(fmtMoney(w.soldNet.amount,w.soldNet.currency)):"";
+  const costs=Array.isArray(a.costs)?a.costs:[], files=Array.isArray(a.files)?a.files:[], img=arcPhoto(a);
+  const d=$("#detail"); d.hidden=false; if(!keep) d.scrollTop=0; document.body.style.overflow="hidden";
+  d.innerHTML=`<div class="dtop"><button id="dBack">← ${esc(t("back"))}</button><span class="sp"></span></div>
+    <div class="dwrap"><div><div class="stage" id="dStage">${img?`<img id="dImg" src="${esc(img)}" alt="">`:""}</div></div>
+    <div class="dh"><div class="arcban" id="arcBan"><b>${esc(t("arcSold"))} ${esc(arcDate(a.sold_at))}</b><span>${esc(t("arcBanner"))}</span></div>
+      <div class="artist">${esc(w.artist)}</div><div class="title"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div>
+      <dl class="facts" id="arcFacts">${fact("medium",esc(w.medium))}${fact("dims",esc(dimsLine(w.dimensions)))}${fact("dimsFramed",esc(dimsLine(w.dimensions_framed)))}${fact("edition",esc(editionLine(w)))}
+        ${fact("ownership",esc(ownershipLine(w)))}${net?`<div class="fact" id="arcNet"><dt>${esc(t("arcSoldLS"))}</dt><dd>${net}</dd></div>`:""}${fact("acquisition",acq)}${fact("insurance",ins)}${fact("condition",esc(w.condition))}
+        ${fact("provenance",esc(w.provenance))}${fact("exhibitions",esc(w.exhibitions))}${fact("literature",esc(w.literature))}${fact("notes",esc(w.notes))}${fact("ref",esc(w.ref))}</dl>
+      <div class="acts"><button id="dPdf">${esc(t("sheetPdf"))}</button><button class="alt" id="dImgDl">${esc(t("image"))}</button></div>
+      ${costs.length?`<div class="sec" id="arcCosts"><h4>${esc(t("arcCosts"))}</h4><section class="block">${costs.map(e=>`<div class="line"><span class="mid"><b>${esc(e.label||e.supplier||"")}</b><div>${esc(e.supplier||"")}</div></span><span class="amt">${esc(fmtMoney(e.amount,e.currency))}<div>${esc(fmtDate(e.date))}</div></span></div>`).join("")}<div class="tot"><span>${esc(t("total"))}</span><span>${esc(curLine(sumByCur(costs,"amount","currency")))}</span></div></section></div>`:""}
+      ${files.length?`<div class="sec" id="arcDocs"><h4>${esc(t("arcDocs"))}</h4>${files.map(f=>`<button class="doc" data-arcfile="${esc(f.storage_path)}"><div><b style="font-weight:500">${esc(f.name||"Document")}</b></div><span>${esc(t("download"))} ↓</span></button>`).join("")}</div>`:""}
+    </div></div>`;
+  $("#dBack").onclick=closeWork;
+  const nl=Object.assign({},w,{location_text:"",location_since:""});   // la fiche PDF de sa période, sans localisation
+  $("#dPdf").onclick=()=>printSheet(nl,img,"");
+  $("#dImgDl").onclick=()=>{ if(!img) return; const x=document.createElement("a"); x.href=img; x.download=fileBase(w)+".jpg"; document.body.appendChild(x); x.click(); x.remove(); };
+  d.querySelectorAll("[data-arcfile]").forEach(b=>b.onclick=async()=>{ try{ const {data,error}=await sb.storage.from(CFG.bucket).download(b.dataset.arcfile); if(error||!data) throw error||new Error("x");
+    const u=URL.createObjectURL(data), x=document.createElement("a"); x.href=u; x.download=b.querySelector("b").textContent; document.body.appendChild(x); x.click(); x.remove(); setTimeout(()=>URL.revokeObjectURL(u),4000); }catch(e){ toast(t("docErr")); } }); }
+function closeWork(){ S.openId=null; S.arcOpen=null; const d=$("#detail"); d.hidden=true; d.innerHTML=""; document.body.style.overflow=""; }
 const fileBase=w=>[w.artist,w.title,w.year].filter(Boolean).join(" - ").replace(/[\\/:*?"<>|]+/g,"").slice(0,120)||"artwork";
 /* view-at-scale settings chosen by this viewer (wall, position), kept on this device */
 /* starts from the composition Legacy Shaper set for the work (scale_view); what the viewer adjusts is kept on this device */
@@ -2025,7 +2103,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v8e02a0d0</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">va9920a7b</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
