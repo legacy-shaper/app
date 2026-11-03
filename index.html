@@ -592,6 +592,36 @@ const ARCH=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai")
    « (1941–2018) » inchangé (Dylan, 03/11/2026, A1 puis 14 h 36 : « né / née », sinon on croit que c'est l'année de l'œuvre).
    Les artistes de la démo sont fictifs : leur genre est connu ici ; pour une vraie collection, la base ne le connaît pas encore. */
 if(ARCH) document.documentElement.classList.add("arch");
+// « Constat d'état » partout en français, « Condition » en anglais (Dylan, 03/11/2026, 20 h 33, « 1 oui »)
+if(ARCH){ I18N.fr.condition="Constat d’état"; I18N.en.ftCond="Condition"; }
+/* Démo (la vitrine de Dylan, données fictives) : chaque texte libre existe en anglais ET en français ; l'app montre celui de la langue choisie
+   (Dylan, 03/11/2026, 20 h 34). Une ligne à la fois (provenance). Seulement la démo : les textes d'un vrai client ne sont jamais traduits. */
+const DEMO_I18N=[
+  ["Oil on linen","Huile sur lin"],["Acrylic on canvas","Acrylique sur toile"],["Pure pigment and resin on panel","Pigment pur et résine sur panneau"],
+  ["Oil and enamel on canvas","Huile et émail sur toile"],["Oil on canvas","Huile sur toile"],["Gouache and graphite on paper","Gouache et graphite sur papier"],
+  ["Sumi ink on Japanese paper","Encre sumi sur papier japonais"],["Bronze with patina, on stone base","Bronze patiné, sur socle en pierre"],
+  ["The artist","L’artiste"],["Acquired from the above","Acquis auprès de ce dernier"],["Estate of the artist","Succession de l’artiste"],["Acquired at auction","Acquis en vente aux enchères"],
+  ["Private collection, Milan","Collection particulière, Milan"],["Private collection, Copenhagen","Collection particulière, Copenhague"],["Private collection, Turin","Collection particulière, Turin"],
+  ["Private collection, Rome","Collection particulière, Rome"],["Private collection, Madrid","Collection particulière, Madrid"],["Private gallery, Milan","Galerie privée, Milan"],
+  ["Milan, private gallery, Élise Marchetti: Soglie, 2015","Milan, galerie privée, Élise Marchetti : Soglie, 2015"],["Copenhagen, retrospective exhibition, 1988","Copenhague, exposition rétrospective, 1988"],
+  ["Turin, museum exhibition, Corvani 1955–1965, 2003","Turin, exposition muséale, Corvani 1955–1965, 2003"],
+  ["Lausanne, museum exhibition, September 2026 – January 2027 (on loan)","Lausanne, exposition muséale, septembre 2026 – janvier 2027 (prêt)"],
+  ["H. Aalto-Lind, Catalogue raisonné, vol. II, no. 214, ill.","H. Aalto-Lind, Catalogue raisonné, vol. II, n° 214, ill."],["M. Corvani, Opera completa, no. 59-07","M. Corvani, Opera completa, n° 59-07"],
+  ["Excellent. Condition report of 4 March 2026.","Excellent. Constat d’état du 4 mars 2026."],["Excellent","Excellent"],["Very good","Très bon"],
+  ["Very good. Minor stabilised craquelure lower left.","Très bon. Légères craquelures stabilisées en bas à gauche."],["Excellent. Surface to be handled with gloves only.","Excellent. Surface à manipuler uniquement avec des gants."],
+  ["Good. Conservation treatment completed February 2025.","Bon. Intervention de conservation-restauration achevée en février 2025."],["Excellent. Framed with UV-filtering glazing.","Excellent. Encadrée sous verre anti-UV."],
+  ["Excellent. Wax renewed in 2025.","Excellent. Cire renouvelée en 2025."],
+  ["Private sale","Vente privée"],["Primary market","Marché primaire"],["Evening sale, Paris","Vente du soir, Paris"],["Evening sale, London","Vente du soir, Londres"],["Art fair, Basel","Foire d’art, Bâle"],
+  ["Private residence · Geneva","Résidence privée · Genève"],["Private residence · Dubai","Résidence privée · Dubaï"],["Yacht · Capri","Yacht · Capri"],["Yacht · Mediterranean","Yacht · Méditerranée"],
+  ["Bonded warehouse · Geneva","Entrepôt sous douane · Genève"],["Fine art storage · Geneva Freeport","Entrepôt sous douane · Ports Francs de Genève"],
+  ["On loan · museum exhibition, Lausanne","En prêt · exposition muséale, Lausanne"],["Held jointly with a family foundation (50 %)","Détenue conjointement avec une fondation familiale (50 %)"]];
+const DEMO_TXT=["medium","provenance","exhibitions","literature","condition","acquisition_source","location_text","ownership_note"];
+function demoTx(v,lang){ if(typeof v!=="string"||!v) return v; const a=lang==="fr"?0:1, b=1-a;
+  return v.split("\n").map(l=>{ const p=DEMO_I18N.find(x=>x[a]===l.trim()); return p?p[b]:l; }).join("\n"); }
+// appliquée à chaque affichage : à partir du texte d'origine gardé (__src), jamais deux fois
+function demoLang(){ if(!ARCH||!S.data||S.cid!==DEMO_COLL||S.data.__lang===LANG) return; S.data.__lang=LANG;
+  const one=w=>{ if(!w) return; w.__src=w.__src||Object.fromEntries(DEMO_TXT.map(k=>[k,w[k]])); for(const k of DEMO_TXT) w[k]=demoTx(w.__src[k],LANG); };
+  (S.data.works||[]).forEach(one); (S.data.archives||[]).forEach(a=>one(a.card)); }
 const DEMO_GENDER={"Élise Marchetti":"f","Henrik Aalto-Lind":"m","Yuna Takemori":"f","Matteo Corvani":"m","Lior Ben-Avram":"m","Céleste Moreau-Vidal":"f","Nadia Karami":"f","Arturo Velarde":"m"};
 function artistTxt(v){ const s=String(v==null?"":v); if(!ARCH||LANG!=="fr") return s;
   return s.replace(/\(\s*b\.\s*(\d{4})\s*\)/,(m,y)=>{ const g=(typeof S!=="undefined"&&S&&S.cid===DEMO_COLL)?DEMO_GENDER[s.split("(")[0].trim()]:""; return g==="f"?`(née en ${y})`:g==="m"?`(né en ${y})`:`(${y})`; }); }
@@ -941,7 +971,7 @@ function brandCollection(coll){
 }
 let fitObs=null, thFor=null;
 function render(){
-  const d=S.data; if(!d) return;
+  const d=S.data; if(!d) return; demoLang();
   if(ARCH&&!fitObs&&"MutationObserver" in window){ fitObs=new MutationObserver(()=>thObserve($("#main"))); fitObs.observe($("#main"),{childList:true,subtree:true}); }
   brandCollection(d.coll);
   $("#collName").textContent=d.coll.name||"";
@@ -1486,7 +1516,12 @@ async function drawFiche(el,H,go){ const d=el.ownerDocument, win=d.defaultView, 
   const o=el.getBoundingClientRect(); let last=performance.now();
   const tick=async()=>{ if(performance.now()-last>6){ await go(); last=performance.now(); } };
   const LS="letterSpacing" in x;
-  const word=(t,cs,r)=>{ x.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; x.fillStyle=cs.color; x.textBaseline="alphabetic";
+  /* Safari (essai iPhone de Dylan, 03/11, 20 h 29) : pour un mot qui suit un retour à la ligne, il ajoute aux rectangles du texte un rectangle VIDE
+     (largeur 0) en fin de ligne précédente ; pris pour la 1re lettre, il la dessinait au bout de la ligne d'avant (« 130 x 100 cm 5 » / « 1,2 × 39,4 in »).
+     Seuls comptent les rectangles qui ont une largeur, pour tous les mots. */
+  const boxes=rg=>[...rg.getClientRects()].filter(r=>r.width>0.01&&r.height>0.01);
+  let wi=0; const LOG=window.__ficheLog?[]:null; if(LOG) window.__ficheLog=LOG;
+  const word=(t,cs,r,k)=>{ if(LOG) LOG.push({w:k,t,x:Math.round((r.left-o.left)*10)/10,y:Math.round((r.top-o.top)*10)/10}); x.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; x.fillStyle=cs.color; x.textBaseline="alphabetic";
     const ls=parseFloat(cs.letterSpacing)||0, m=x.measureText(t), a=m.fontBoundingBoxAscent||parseFloat(cs.fontSize)*.8, dd=m.fontBoundingBoxDescent||parseFloat(cs.fontSize)*.2;
     const y=r.top-o.top+(r.height-(a+dd))/2+a, x0=r.left-o.left;
     if(!ls){ x.fillText(t,x0,y); return; }
@@ -1499,11 +1534,11 @@ async function drawFiche(el,H,go){ const d=el.ownerDocument, win=d.defaultView, 
     const bt=parseFloat(cs.borderTopWidth)||0; if(bt>0&&cs.borderTopStyle!=="none"){ x.fillStyle=cs.borderTopColor; x.fillRect(L,T,r.width,bt); }
     if(e.tagName==="IMG"&&e.naturalWidth){ try{ await e.decode(); }catch(err){} await go(); last=performance.now(); x.drawImage(e,L,T,r.width,r.height); }
     for(const n of e.childNodes){ if(n.nodeType!==3||!n.nodeValue.trim()) continue; const up=cs.textTransform==="uppercase";
-      for(const m of n.nodeValue.matchAll(/\S+/g)){ const rg=d.createRange(); rg.setStart(n,m.index); rg.setEnd(n,m.index+m[0].length); const rs=rg.getClientRects();
-        if(rs.length===1) word(up?m[0].toUpperCase():m[0],cs,rs[0]);
-        else{ let i=m.index; for(const ch of m[0]){ const rc=d.createRange(); rc.setStart(n,i); rc.setEnd(n,i+ch.length); const q=rc.getClientRects()[0]; if(q) word(up?ch.toUpperCase():ch,cs,q); i+=ch.length; } }
+      for(const m of n.nodeValue.matchAll(/\S+/g)){ const rg=d.createRange(); rg.setStart(n,m.index); rg.setEnd(n,m.index+m[0].length); const rs=boxes(rg); wi++;
+        if(rs.length===1) word(up?m[0].toUpperCase():m[0],cs,rs[0],wi);
+        else{ let i=m.index; for(const ch of m[0]){ const rc=d.createRange(); rc.setStart(n,i); rc.setEnd(n,i+ch.length); const q=boxes(rc)[0]; if(q) word(up?ch.toUpperCase():ch,cs,q,wi); i+=ch.length; } }
         await tick(); } } }
-  c.remove(); return c; }
+  c.remove(); if(window.__ficheKeep) window.__ficheCanvas=c; return c; }
 async function ficheBlob(items,alive){ const T=window.__fbT=[]; const mark=k=>T.push([k,Math.round(performance.now())]);
   const go=async()=>{ await new Promise(r=>setTimeout(r,0)); if(alive&&!alive()) throw new Error("closed"); };
   await go(); mark("start"); if(!await pdfLibs()) throw new Error("pdf-libs"); mark("libs");
@@ -1539,7 +1574,7 @@ async function ficheBlob(items,alive){ const T=window.__fbT=[]; const mark=k=>T.
       if(it.scale){ st.innerHTML=`<div class="nfiche"><div class="nfin"><img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper"><div class="nfimg" style="height:700px"><img src="${it.scale}" alt=""></div><div class="nfh"><div class="nfa">${esc(artistTxt(it.w.artist))}</div><div class="nft"><i>${esc(it.w.title)}</i> · ${esc(t("atScale"))}</div></div></div></div>`;
         el=st.firstElementChild; await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; }))); await page(el); } }
     await go(); pdf.setProperties({title:items.length===1?`${items[0].w.artist||""} — ${items[0].w.title||""}`:t("ficheFoot"),author:"Legacy Shaper",creator:"Legacy Shaper"});
-    return pdf.output("blob"); } finally { fr.remove(); } }
+    return pdf.output("blob"); } finally { if(window.__ficheKeep) window.__ficheFrame=fr; else fr.remove(); } }
 /* « Partager la fiche » (essai, Dylan, 03/11/2026) : sur chaque œuvre (pas dans les Archives), « Fiche complète » ou « Fiche technique » ;
    la fiche s'ouvre ensuite dans la visionneuse (« Partager », « Télécharger »). */
 function shareChoice(w,getImg,getScale){ const old=$("#ftSheet"); if(old) old.remove();
@@ -2390,7 +2425,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(()=>{ const warm=()=>{ if(navigator.serviceWorker.controller) ["lib/pdf.min.js","lib/pdf.worker.min.js"].forEach(u=>fetch(u).catch(()=>{})); }; navigator.serviceWorker.controller?setTimeout(warm,1500):navigator.serviceWorker.addEventListener("controllerchange",()=>setTimeout(warm,1500),{once:true}); }).catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">va21e8684</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v10df12f9</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
