@@ -122,7 +122,8 @@ img{display:block;max-width:100%}
 .pvtop{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
 .pvtop button{background:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:500 14px var(--sans,inherit);color:var(--ink)} .pvtop b{font-weight:600;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pvbody{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:14px 12px 20px;display:flex;flex-direction:column;align-items:center;gap:6px}
-.pvpage,.pvimg{display:block;max-width:100%;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.18)} .pvn{margin:4px 0 10px;font-size:12px;color:var(--muted)} .pvframe{width:100%;flex:1;min-height:70vh;border:0;background:#fff}
+.pvpage,.pvimg{display:block;max-width:100%;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.18)} .pvn{margin:4px 0 10px;font-size:12px;color:var(--muted)} .pvwait{margin:40px 0;font-size:14px;color:var(--muted)}
+.pvmsg{margin:40px 16px;max-width:420px;text-align:center;display:grid;gap:14px;justify-items:center} .pvmsg p{margin:0;font-size:14px;line-height:1.5;color:var(--ink)} .pvmsg .pvs{min-height:44px;padding:0 22px;border-radius:999px;background:none;border:1.5px solid var(--deep);color:var(--deep);font:600 14px var(--sans,inherit)} .pvframe{width:100%;flex:1;min-height:70vh;border:0;background:#fff}
 .pvbar{display:flex;gap:10px;padding:12px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));background:var(--surface);border-top:1px solid var(--line)}
 .pvbar button{flex:1;min-height:46px;border-radius:999px;font:600 14px var(--sans,inherit)} .pvbar .pvp{background:var(--deep);color:var(--ivory);border:0} .pvbar .pvs{background:none;border:1.5px solid var(--deep);color:var(--deep)}
 .nfstage{position:fixed;left:-3000px;top:0;width:794px;height:1200px;border:0;pointer-events:none}
@@ -438,6 +439,7 @@ const I18N={
    arcIntro:"Works that have left your collection, as they stood until their sale. View only.",arcSold:"Sold on",arcBanner:"Archives · view only · your period of ownership, until the sale",
    arcSoldLS:"Sold to Legacy Shaper",arcCosts:"Costs paid for this work",arcDocs:"Documents",
    viewInv:"View the invoice",viewDoc:"View the document",viewSheet:"View the sheet",pvShare:"Share",pvDownload:"Download",pvPage:"Page",pvOf:"of",ficheFoot:"Inventory sheet",pvErr:"This document could not be opened. Please try again.",
+   pvOpening:"Opening…",pvOpenInv:"Opening the invoice…",pvOpenSheet:"Preparing the sheet…",pvOpenDoc:"Opening the document…",pvSlow:"This document is taking longer than usual to display. You may download it.",pvWaitDl:"The document is still on its way.",
    nWorks:"Works",oneWork:"Work",nLoc:"Locations",insured:"Insured value",acq:"Acquisitions",
    search:"Search an artist, a title…",allLoc:"All locations",noWorks:"No work matches this search.",
    live:"Up to date",offline:"Offline · copy of",updated:"Updated",
@@ -503,6 +505,7 @@ const I18N={
    arcIntro:"Les œuvres sorties de votre collection, telles qu’elles étaient jusqu’à leur vente. Lecture seule.",arcSold:"Vendue le",arcBanner:"Archives · lecture seule · votre période, jusqu’à la vente",
    arcSoldLS:"Vendue à Legacy Shaper",arcCosts:"Frais payés pour cette œuvre",arcDocs:"Documents",
    viewInv:"Voir la facture",viewDoc:"Voir le document",viewSheet:"Voir la fiche",pvShare:"Partager",pvDownload:"Télécharger",pvPage:"Page",pvOf:"sur",ficheFoot:"Fiche d’inventaire",pvErr:"Ce document n’a pas pu s’ouvrir. Réessayez.",
+   pvOpening:"Ouverture…",pvOpenInv:"Ouverture de la facture…",pvOpenSheet:"Préparation de la fiche…",pvOpenDoc:"Ouverture du document…",pvSlow:"Ce document met plus de temps que d’habitude à s’afficher. Vous pouvez le télécharger.",pvWaitDl:"Le document arrive.",
    nWorks:"Œuvres",oneWork:"Œuvre",nLoc:"Localisations",insured:"Valeur assurée",acq:"Acquisitions",
    search:"Rechercher un artiste, un titre…",allLoc:"Toutes les localisations",noWorks:"Aucune œuvre ne correspond à cette recherche.",
    live:"À jour",offline:"Hors ligne · copie du",updated:"Mise à jour",
@@ -886,7 +889,7 @@ const TAB_ICON={
   expenses:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M6 3.5h12v17l-2-1.4-2 1.4-2-1.4-2 1.4-2-1.4-2 1.4z"/><path d="M9 8.5h6M9 12h6M9 15.5h4"/></svg>',
   documents:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M7 3.5h7l4 4V20.5H7z"/><path d="M14 3.5v4h4M9.5 12h6M9.5 15.5h6"/></svg>',
   archives:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><rect x="3.5" y="4.5" width="17" height="4"/><path d="M5 8.5V19.5h14V8.5M10 12h4"/></svg>'};
-function showApp(){ gate.hidden=true; gate.innerHTML=""; $("#app").hidden=false; $("#topLogo").src=LOGO_H; render(); }
+function showApp(){ gate.hidden=true; gate.innerHTML=""; $("#app").hidden=false; $("#topLogo").src=LOGO_H; render(); if(ARCH&&!window.__pvNoWarm) setTimeout(pdfWarm,2500); }
 /* The home-screen / Dock name follows the open collection: the icon carries the Legacy Shaper logo,
    the label underneath carries the collection ("The Example Collection" -> "Example"). */
 function homeLabel(name){
@@ -977,7 +980,7 @@ async function condOpen(id,share){ const doc=((S.data&&S.data.docs)||[]).find(d=
   if(share){ const file=new File([blob],doc.name||"condition-report.pdf",{type:blob.type||doc.mime||"application/pdf"});
     if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:doc.name}); return; }catch(e){ if(e&&e.name==="AbortError") return; } }
     return downloadDoc(id,true); }
-  if(ARCH) return openPdf({title:doc.name||"",name:doc.name||"document",blob});
+  if(ARCH) return openPdf({title:doc.name||"",name:doc.name||"document",blob,loading:t("pvOpenDoc")});
   const url=URL.createObjectURL(blob); const win=window.open(url,"_blank"); if(!win) return downloadDoc(id); setTimeout(()=>URL.revokeObjectURL(url),60000); }
 function condBind(d){
   d.querySelectorAll("[data-cndopen]").forEach(b=>b.onclick=()=>condOpen(b.dataset.cndopen,false));
@@ -1301,39 +1304,75 @@ async function shareSheet(w,img){
 /* Tout ce qui est listé s'ouvre en entier d'un toucher (Dylan, 03/11/2026, règle L) : un seul écran, le PDF (ou l'image) en entier, « Partager »
    (le bouton d'Apple : enregistrer, email, WhatsApp, imprimer) et « Télécharger ». Pages dessinées par pdf.js (chargé à la première ouverture) ;
    sans pdf.js, le PDF dans un cadre. Jamais la page d'impression du navigateur. */
-const PDFJS="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js", PDFJS_W="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-async function pdfjsLoad(){ if(window.pdfjsLib&&window.pdfjsLib.GlobalWorkerOptions.workerSrc) return true;
-  try{ if(!window.pdfjsLib) await loadScript(PDFJS);
-    const r=await fetch(PDFJS_W); if(!r.ok) throw new Error("worker");   // un worker venu d'un autre site est refusé par le navigateur : copie locale (blob)
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc=URL.createObjectURL(new Blob([await r.text()],{type:"text/javascript"})); }catch(e){} return !!(window.pdfjsLib&&window.pdfjsLib.GlobalWorkerOptions.workerSrc); }
-function pvClose(){ const v=$("#pdfv"); if(v){ (v.__urls||[]).forEach(u=>URL.revokeObjectURL(u)); v.remove(); } if(!$("#detail")||$("#detail").hidden) document.body.style.overflow=""; }
-async function openPdf(o){ pvClose(); let blob=o.blob;
-  if(!blob&&o.src){ try{ const r=await fetch(o.src); if(!r.ok) throw new Error("x"); blob=await r.blob(); }catch(e){ toast(t("pvErr")); return; } }
-  if(!blob){ toast(t("pvErr")); return; }
-  const isPdf=/pdf/i.test(blob.type||"")||/\.pdf$/i.test(o.name||""), file=new File([blob],o.name||"document.pdf",{type:blob.type||(isPdf?"application/pdf":"")});
+/* A8 (Dylan, 03/11/2026, essai iPhone : écran blanc, « Retour » sans effet) : pdf.js 3.11.174 et son worker HÉBERGÉS DANS L'APP (même origine,
+   version figée, gardés hors ligne par le service worker) : un vrai worker, jamais le repli sur le fil principal qui figeait l'écran.
+   La visionneuse s'ouvre dès le toucher (« Ouverture de la facture… ») ; « Retour » est branché tout de suite et ferme toujours, immédiatement
+   (chargement et rendu annulés) ; au-delà de 5 s sans page : un message et « Télécharger » ; page 1 d'abord ; échelle plafonnée. */
+const PDFJS="lib/pdf.min.js", PDFJS_W="lib/pdf.worker.min.js";
+let pdfjsP=null;
+function pdfjsLoad(){ if(window.pdfjsLib&&window.pdfjsLib.GlobalWorkerOptions.workerSrc) return Promise.resolve(true);
+  return pdfjsP||(pdfjsP=loadScript(PDFJS).then(()=>{ window.pdfjsLib.GlobalWorkerOptions.workerSrc=PDFJS_W; return true; }).catch(()=>{ pdfjsP=null; return false; })); }
+// un seul worker pdf.js, gardé d'une ouverture à l'autre (A8 : plus de 1,4 Mo relu à chaque document) ; refait s'il a disparu
+let pdfW=null;
+function pdfWorker(){ if(!pdfW||pdfW.destroyed) pdfW=new window.pdfjsLib.PDFWorker(); return pdfW; }
+function pdfWarm(){ return pdfjsLoad().then(ok=>{ if(ok) pdfWorker(); }).catch(()=>{}); }   // lecteur et worker prêts avant le premier « Voir la facture »
+const PV_SLOW=5000;
+function pvClose(ev){ const v=$("#pdfv"); if(!v) return; v.__closed=true;
+  try{ v.__task&&v.__task.destroy(); }catch(e){}
+  if(v.__task&&!v.__done&&pdfW){ try{ pdfW.destroy(); }catch(e){} pdfW=null; setTimeout(pdfWarm,0); }   // fermé pendant le dessin : le worker occupé est remplacé, l'ouverture suivante n'attend pas
+  (v.__urls||[]).forEach(u=>URL.revokeObjectURL(u)); clearTimeout(v.__slow); v.remove();
+  if(ev&&ev.timeStamp){ window.__pvCloseMs=performance.now()-ev.timeStamp; window.__pvCloseAt=ev.timeStamp; }
+  if(!$("#detail")||$("#detail").hidden) document.body.style.overflow=""; }
+/* o = {title, name, loading, load: async()=>Blob} (ou blob / src) */
+function openPdf(o){ pvClose(); const t0=performance.now(); window.__pvFirstMs=null;
   const v=document.createElement("div"); v.id="pdfv"; v.className="pdfv"; v.setAttribute("role","dialog"); v.setAttribute("aria-modal","true"); v.__urls=[];
-  v.innerHTML=`<div class="pvtop"><button id="pvBack">← ${esc(t("back"))}</button><b id="pvTitle">${esc(o.title||o.name||"")}</b></div><div class="pvbody" id="pvBody"></div>
-    <div class="pvbar"><button class="pvp" id="pvShare">${esc(t("pvShare"))}</button><button class="pvs" id="pvDl">${esc(t("pvDownload"))}</button></div>`;
+  v.innerHTML=`<div class="pvtop"><button type="button" id="pvBack">← ${esc(t("back"))}</button><b id="pvTitle">${esc(o.title||o.name||"")}</b></div>
+    <div class="pvbody" id="pvBody"><p class="pvwait" id="pvWait">${esc(o.loading||t("pvOpening"))}</p></div>
+    <div class="pvbar"><button type="button" class="pvp" id="pvShare">${esc(t("pvShare"))}</button><button type="button" class="pvs" id="pvDl">${esc(t("pvDownload"))}</button></div>`;
   document.body.appendChild(v); document.body.style.overflow="hidden";
-  $("#pvBack").onclick=pvClose;
-  $("#pvShare").onclick=async()=>{ if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:(o.name||"").replace(/\.pdf$/i,"")}); return; }catch(e){ if(e&&e.name==="AbortError") return; } } $("#pvDl").click(); };
-  $("#pvDl").onclick=()=>{ const u=URL.createObjectURL(blob); v.__urls.push(u); const a=document.createElement("a"); a.href=u; a.download=o.name||"document.pdf"; document.body.appendChild(a); a.click(); a.remove(); };
-  const body=$("#pvBody");
-  if(!isPdf){ const u=URL.createObjectURL(blob); v.__urls.push(u); body.innerHTML=`<img class="pvimg" src="${u}" alt="">`; return; }
-  if(await pdfjsLoad()){ try{ const doc=await window.pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise; v.dataset.pages=doc.numPages;
-      for(let n=1;n<=doc.numPages;n++){ const pg=await doc.getPage(n), vp0=pg.getViewport({scale:1}), w=Math.min(body.clientWidth||360,900)-24, sc=w/vp0.width*(window.devicePixelRatio||2), vp=pg.getViewport({scale:sc});
-        const c=document.createElement("canvas"); c.width=Math.round(vp.width); c.height=Math.round(vp.height); c.className="pvpage"; c.style.width=w+"px";
-        body.appendChild(c); await pg.render({canvasContext:c.getContext("2d"),viewport:vp}).promise;
+  const back=v.querySelector("#pvBack"); back.addEventListener("pointerdown",pvClose); back.addEventListener("click",pvClose);   // ferme au premier contact
+  const body=v.querySelector("#pvBody"), alive=()=>!v.__closed&&document.body.contains(v);
+  let blob=null, file=null;
+  const say=(msg,withDl)=>{ if(!alive()) return; body.innerHTML=`<div class="pvmsg" id="pvMsg"><p>${esc(msg)}</p>${withDl?`<button type="button" class="pvs" id="pvMsgDl">${esc(t("pvDownload"))}</button>`:""}</div>`;
+    const b=v.querySelector("#pvMsgDl"); if(b) b.onclick=()=>v.querySelector("#pvDl").click(); };
+  const dl=()=>{ if(!blob){ toast(t("pvWaitDl")); return; } const u=URL.createObjectURL(blob); v.__urls.push(u); const a=document.createElement("a"); a.href=u; a.download=o.name||"document.pdf"; document.body.appendChild(a); a.click(); a.remove(); };
+  v.querySelector("#pvDl").onclick=dl;
+  v.querySelector("#pvShare").onclick=async()=>{ if(!file){ toast(t("pvWaitDl")); return; }
+    if(navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){ try{ await navigator.share({files:[file],title:(o.name||"").replace(/\.pdf$/i,"")}); return; }catch(e){ if(e&&e.name==="AbortError") return; } } dl(); };
+  v.__slow=setTimeout(()=>{ if(alive()&&!v.dataset.first) say(t("pvSlow"),true); },PV_SLOW);
+  (async()=>{
+    try{ if(window.__pvDelay) await new Promise(r=>setTimeout(r,window.__pvDelay));   // essai : un chargement lent
+      if(window.__pvFail) throw new Error("essai");                                    // essai : un échec du lecteur
+      blob=o.blob||(o.load?await o.load(alive):null);
+      if(!blob&&o.src){ const r=await fetch(o.src); if(!r.ok) throw new Error("x"); blob=await r.blob(); }
+      if(!blob) throw new Error("x"); if(!alive()) return;
+      const isPdf=/pdf/i.test(blob.type||"")||/\.pdf$/i.test(o.name||"");
+      file=new File([blob],o.name||"document.pdf",{type:blob.type||(isPdf?"application/pdf":"")});
+      if(!isPdf){ const u=URL.createObjectURL(blob); v.__urls.push(u); body.innerHTML=`<img class="pvimg" src="${u}" alt="">`; v.dataset.first="1"; window.__pvFirstMs=performance.now()-t0; return; }
+      if(!await pdfjsLoad()||!alive()){ if(alive()){ const u=URL.createObjectURL(blob); v.__urls.push(u); body.innerHTML=`<iframe class="pvframe" src="${u}" title="${esc(o.name||"")}"></iframe>`; v.dataset.first="1"; } return; }
+      const task=window.pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer()),isEvalSupported:false,worker:pdfWorker()}); v.__task=task;
+      const doc=await task.promise; if(!alive()) return; v.dataset.pages=doc.numPages;
+      const W=Math.min(body.clientWidth||360,900)-24, dpr=Math.min(window.devicePixelRatio||1,2);
+      for(let n=1;n<=doc.numPages;n++){ if(!alive()) return;
+        const pg=await doc.getPage(n), vp0=pg.getViewport({scale:1}), sc=Math.min(W/vp0.width*dpr, 1600/vp0.width), vp=pg.getViewport({scale:sc});   // échelle plafonnée
+        const c=document.createElement("canvas"); c.width=Math.round(vp.width); c.height=Math.round(vp.height); c.className="pvpage"; c.style.width=W+"px";
+        const rt=pg.render({canvasContext:c.getContext("2d"),viewport:vp}); v.__render=rt; await rt.promise; if(!alive()) return;
+        if(n===1){ body.innerHTML=""; v.dataset.first="1"; window.__pvFirstMs=performance.now()-t0; clearTimeout(v.__slow); }
+        body.appendChild(c);
         if(doc.numPages>1) body.insertAdjacentHTML("beforeend",`<p class="pvn">${esc(t("pvPage"))} ${n} ${esc(t("pvOf"))} ${doc.numPages}</p>`); }
-      return; }catch(e){} }
-  const u=URL.createObjectURL(blob); v.__urls.push(u); body.innerHTML=`<iframe class="pvframe" src="${u}" title="${esc(o.name||"")}"></iframe>`; }
+      v.__done=true;
+    }catch(e){ if(alive()){ clearTimeout(v.__slow); say(t("pvErr"),!!blob); } }
+  })();
+  return v; }
 function invPdfOf(i){ if(!i) return null; if(i.pdf) return {src:i.pdf}; const d=((S.data&&S.data.docs)||[]).find(x=>x.kind==="ls_invoice"&&x.invoice_id===i.id); return d?{doc:d}:null; }
-async function openInvoicePdf(id){ const i=((S.data&&S.data.invoices)||[]).find(x=>x.id===id), p=invPdfOf(i); if(!p) return; const name=`${i.number||"Facture"}.pdf`;
+function openInvoicePdf(id){ const i=((S.data&&S.data.invoices)||[]).find(x=>x.id===id), p=invPdfOf(i); if(!p) return; const name=`${i.number||"Facture"}.pdf`;
   logAccess("download",p.doc?p.doc.id:id);
-  if(p.src) return openPdf({title:i.number,name,src:p.src});
-  let blob; try{ blob=await docBlob(p.doc.id); }catch(e){ toast(t("docErr")); return; } return openPdf({title:i.number,name:p.doc.name||name,blob}); }
+  if(p.src) return openPdf({title:i.number,name,src:p.src,loading:t("pvOpenInv")});
+  return openPdf({title:i.number,name:p.doc.name||name,loading:t("pvOpenInv"),load:()=>docBlob(p.doc.id)}); }
 /* Fiche d'inventaire : un vrai fichier PDF (Dylan, 03/11/2026, A3-A5) : une page A4 (l'image se resserre ; 2 pages seulement si le texte est vraiment
    trop long), aucune marge du navigateur, un seul pied de page « Legacy Shaper · Fiche d'inventaire · <collection> », jamais la vente dans le pied de page. */
+const FONTS_CSS="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Hanken+Grotesk:wght@300;400;500;600&display=swap";   // = le lien de la page (gardé hors ligne)
+const NF_FONTS=['500 27px "Cormorant Garamond"','italic 500 27px "Cormorant Garamond"','400 12px "Hanken Grotesk"','600 15px "Hanken Grotesk"'];
 const NF_CSS=`.nfiche{width:794px;height:1123px;box-sizing:border-box;padding:46px 64px 0;background:#fff;color:#16241A;font-family:"Hanken Grotesk",Helvetica,Arial,sans-serif;display:flex;flex-direction:column}
 .nfl{height:46px;align-self:center;margin-bottom:22px} .nfimg{display:flex;align-items:center;justify-content:center;background:#F7F4EC;border-radius:4px;flex:none} .nfimg img{max-height:calc(100% - 28px);max-width:92%;object-fit:contain}
 .nfh{margin:20px 0 12px} .nfa{font-size:15px;font-weight:600} .nft{font:500 27px/1.2 "Cormorant Garamond",Georgia,serif;margin-top:2px} .nft i{font-style:italic}
@@ -1350,15 +1389,65 @@ function ficheHTML(w,img,arc,imgH){ const rows=ficheRows(w,arc);
     <div class="nfh"><div class="nfa">${esc(artistTxt(w.artist))}</div><div class="nft"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div></div>
     <dl class="nfdl">${rows.map(r=>`<div class="nff"><dt>${esc(r[0]==="__sold"?t("arcSoldLS"):t(r[0]))}</dt><dd>${esc(r[1])}</dd></div>`).join("")}</dl>
     <div class="nffoot">Legacy Shaper · ${esc(t("ficheFoot"))} · ${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</div></div>`; }
-async function ficheBlob(items){ if(!await pdfLibs()) throw new Error("pdf-libs");
+/* A8 : l'image de la fiche est encodée en JPEG dans un fil séparé (Safari l'encode sinon sur l'écran, qui ne répond plus) ; repli : toBlob */
+let jpgW=null, jpgN=0; const jpgCb={};
+function jpgWorker(){ if(jpgW!==null) return jpgW;
+  try{ if(typeof OffscreenCanvas==="undefined"||!window.createImageBitmap||!window.Worker) throw 0;
+    const src='onmessage=async e=>{ const d=e.data; try{ const c=new OffscreenCanvas(d.bm.width,d.bm.height); c.getContext("2d").drawImage(d.bm,0,0); if(d.bm.close) d.bm.close(); const b=await c.convertToBlob({type:"image/jpeg",quality:d.q}); postMessage({id:d.id,buf:await b.arrayBuffer()}); }catch(err){ postMessage({id:d.id,err:1}); } };';
+    jpgW=new Worker(URL.createObjectURL(new Blob([src],{type:"text/javascript"})));
+    jpgW.onmessage=e=>{ const f=jpgCb[e.data.id]; delete jpgCb[e.data.id]; if(f) f(e.data); };
+  }catch(e){ jpgW=false; } return jpgW; }
+async function jpegBytes(c,q){ const w=jpgWorker();
+  if(w){ try{ const bm=await createImageBitmap(c), id=++jpgN;
+      const r=await Promise.race([new Promise(res=>{ jpgCb[id]=res; w.postMessage({id,bm,q},[bm]); }),new Promise(res=>setTimeout(()=>{ delete jpgCb[id]; res(null); },8000))]);
+      if(r&&r.buf){ window.__jpgVia="worker"; return new Uint8Array(r.buf); } }catch(e){} }
+  window.__jpgVia="toBlob";
+  const b=await new Promise(r=>c.toBlob(r,"image/jpeg",q)); return b?new Uint8Array(await b.arrayBuffer()):c.toDataURL("image/jpeg",q); }
+/* A8 : la fiche est dessinée par l'app elle-même, d'après la mise en page calculée par le navigateur (cadre isolé), en petites étapes :
+   « Retour » répond entre deux étapes (html2canvas occupait l'écran d'un seul bloc, ~200 ms dans Safari). Rendu au double de la taille (comme avant). */
+async function drawFiche(el,H,go){ const d=el.ownerDocument, win=d.defaultView, W=794, K=2;
+  const c=d.createElement("canvas"); c.width=W*K; c.height=Math.round(H*K); const x=c.getContext("2d"); x.scale(K,K); x.fillStyle="#ffffff"; x.fillRect(0,0,W,H);
+  c.style.cssText="position:absolute;left:-99999px;top:0;width:1px;height:1px"; d.body.appendChild(c);   // dans le cadre : ses polices servent au dessin
+  const fonts=new Set([el,...el.querySelectorAll("*")].map(e=>{ const q=win.getComputedStyle(e); return `${q.fontStyle} ${q.fontWeight} ${q.fontSize} ${q.fontFamily}`; }));
+  try{ await Promise.all([...fonts].map(f=>d.fonts.load(f))); }catch(err){}
+  const o=el.getBoundingClientRect(); let last=performance.now();
+  const tick=async()=>{ if(performance.now()-last>6){ await go(); last=performance.now(); } };
+  const LS="letterSpacing" in x;
+  const word=(t,cs,r)=>{ x.font=`${cs.fontStyle} ${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`; x.fillStyle=cs.color; x.textBaseline="alphabetic";
+    const ls=parseFloat(cs.letterSpacing)||0, m=x.measureText(t), a=m.fontBoundingBoxAscent||parseFloat(cs.fontSize)*.8, dd=m.fontBoundingBoxDescent||parseFloat(cs.fontSize)*.2;
+    const y=r.top-o.top+(r.height-(a+dd))/2+a, x0=r.left-o.left;
+    if(!ls){ x.fillText(t,x0,y); return; }
+    if(LS){ x.letterSpacing=ls+"px"; x.fillText(t,x0,y); x.letterSpacing="0px"; return; }
+    let cx=x0; for(const ch of t){ x.fillText(ch,cx,y); cx+=x.measureText(ch).width+ls; } };
+  for(const e of [el,...el.querySelectorAll("*")]){ await tick();
+    const cs=win.getComputedStyle(e), r=e.getBoundingClientRect(), L=r.left-o.left, T=r.top-o.top;
+    const bg=cs.backgroundColor; if(e!==el&&bg&&bg!=="transparent"&&!/rgba\(.*,\s*0\)$/.test(bg)){ x.fillStyle=bg; const rad=parseFloat(cs.borderTopLeftRadius)||0;
+      if(rad&&x.roundRect){ x.beginPath(); x.roundRect(L,T,r.width,r.height,rad); x.fill(); } else x.fillRect(L,T,r.width,r.height); }
+    const bt=parseFloat(cs.borderTopWidth)||0; if(bt>0&&cs.borderTopStyle!=="none"){ x.fillStyle=cs.borderTopColor; x.fillRect(L,T,r.width,bt); }
+    if(e.tagName==="IMG"&&e.naturalWidth){ try{ await e.decode(); }catch(err){} await go(); last=performance.now(); x.drawImage(e,L,T,r.width,r.height); }
+    for(const n of e.childNodes){ if(n.nodeType!==3||!n.nodeValue.trim()) continue; const up=cs.textTransform==="uppercase";
+      for(const m of n.nodeValue.matchAll(/\S+/g)){ const rg=d.createRange(); rg.setStart(n,m.index); rg.setEnd(n,m.index+m[0].length); const rs=rg.getClientRects();
+        if(rs.length===1) word(up?m[0].toUpperCase():m[0],cs,rs[0]);
+        else{ let i=m.index; for(const ch of m[0]){ const rc=d.createRange(); rc.setStart(n,i); rc.setEnd(n,i+ch.length); const q=rc.getClientRects()[0]; if(q) word(up?ch.toUpperCase():ch,cs,q); i+=ch.length; } }
+        await tick(); } } }
+  c.remove(); return c; }
+async function ficheBlob(items,alive){ const T=window.__fbT=[]; const mark=k=>T.push([k,Math.round(performance.now())]);
+  const go=async()=>{ await new Promise(r=>setTimeout(r,0)); if(alive&&!alive()) throw new Error("closed"); };
+  await go(); mark("start"); if(!await pdfLibs()) throw new Error("pdf-libs"); mark("libs");
+  // A8 : fermée par « Retour » → la fabrication s'arrête à l'étape suivante (sinon elle continuait et ralentissait tout) ; l'écran reprend la main entre chaque étape
+  const jpg=c=>jpegBytes(c,0.92);
   const pdf=new window.jspdf.jsPDF({unit:"pt",format:"a4",compress:true}), PW=pdf.internal.pageSize.getWidth(), PH=pdf.internal.pageSize.getHeight(); let first=true;
   // la fiche est dessinée dans un cadre isolé qui ne contient qu'elle (html2canvas recopie tout le document : jamais l'app entière, qui déclenchait l'impression)
   const fr=document.createElement("iframe"); fr.className="nfstage"; fr.setAttribute("aria-hidden","true"); fr.tabIndex=-1; document.body.appendChild(fr);
-  const fd=fr.contentDocument; fd.open(); fd.write(`<!doctype html><html><head><meta charset="utf-8"><base href="${esc(location.href)}"><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,500&family=Hanken+Grotesk:wght@400;600&display=swap"><style>html,body{margin:0;background:#fff}${NF_CSS}</style></head><body><div id="st"></div></body></html>`); fd.close();
+  const fd=fr.contentDocument; fd.open(); fd.write(`<!doctype html><html><head><meta charset="utf-8"><base href="${esc(location.href)}"><link id="nffonts" rel="stylesheet" href="${esc(FONTS_CSS)}"><style>html,body{margin:0;background:#fff}${NF_CSS}</style></head><body><div id="st"></div></body></html>`); fd.close();
   const st=fd.getElementById("st");
-  const page=async(el,h)=>{ const c=await window.html2canvas(el,{scale:2,backgroundColor:"#ffffff",logging:false,width:794,height:h||1123,windowWidth:794});
-    if(!first) pdf.addPage(); first=false; pdf.addImage(c.toDataURL("image/jpeg",0.92),"JPEG",0,0,PW,PH*((h||1123)/1123)); };
-  try{ await new Promise(r=>setTimeout(r,30)); if(fd.fonts&&fd.fonts.ready) await fd.fonts.ready;
+  const page=async(el,h)=>{ await go(); mark("h2c"); const c=await drawFiche(el,h||1123,go);
+    mark("h2c-end"); await go(); const im=await jpg(c); mark("jpg-end"); await go(); if(!first) pdf.addPage(); first=false; pdf.addImage(im,"JPEG",0,0,PW,PH*((h||1123)/1123)); };
+  mark("frame"); try{ await new Promise(r=>setTimeout(r,30));
+    // A8 : les polices de la fiche sont chargées AVANT sa mise en page (sinon : mise en page avec les polices de secours) ; même lien que l'app (gardé hors ligne)
+    await new Promise(r=>{ const l=fd.getElementById("nffonts"); if(!l||l.sheet) return r(); l.onload=l.onerror=r; setTimeout(r,3000); });
+    await Promise.race([Promise.all(NF_FONTS.map(f=>fd.fonts.load(f).catch(()=>0))),new Promise(r=>setTimeout(r,3000))]);
+    if(fd.fonts&&fd.fonts.ready) await fd.fonts.ready; mark("fonts");
     window.__fichePages=[];
     for(const it of items){ let imgH=430, el;
       for(;;){ st.innerHTML=ficheHTML(it.w,it.img,it.arc,imgH); el=st.firstElementChild;
@@ -1366,17 +1455,16 @@ async function ficheBlob(items){ if(!await pdfLibs()) throw new Error("pdf-libs"
         if(el.scrollHeight<=1123||!it.img||imgH<=260) break; imgH=Math.max(260,imgH-(el.scrollHeight-1123)-4); }
       window.__fichePages.push({text:el.innerText,height:el.scrollHeight});
       if(el.scrollHeight<=1123){ el.style.height="1123px"; await page(el); }
-      else{ el.style.height="auto"; const H=el.scrollHeight, c=await window.html2canvas(el,{scale:2,backgroundColor:"#ffffff",logging:false,width:794,height:H,windowWidth:794});   // texte vraiment trop long : 2 pages
+      else{ el.style.height="auto"; const H=el.scrollHeight; await go(); const c=await drawFiche(el,H,go);   // texte vraiment trop long : 2 pages
         for(let y=0;y<H;y+=1123){ const part=document.createElement("canvas"); part.width=c.width; part.height=Math.min(1123,H-y)*2; part.getContext("2d").drawImage(c,0,y*2,c.width,part.height,0,0,c.width,part.height);
-          if(!first) pdf.addPage(); first=false; pdf.addImage(part.toDataURL("image/jpeg",0.92),"JPEG",0,0,PW,PH*(part.height/2/1123)); } }
+          const im=await jpg(part); await go(); if(!first) pdf.addPage(); first=false; pdf.addImage(im,"JPEG",0,0,PW,PH*(part.height/2/1123)); } }
       if(it.scale){ st.innerHTML=`<div class="nfiche"><img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper"><div class="nfimg" style="height:760px"><img src="${it.scale}" alt=""></div><div class="nfh"><div class="nfa">${esc(artistTxt(it.w.artist))}</div><div class="nft"><i>${esc(it.w.title)}</i> · ${esc(t("atScale"))}</div></div><div class="nffoot">Legacy Shaper · ${esc(t("ficheFoot"))} · ${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</div></div>`;
         el=st.firstElementChild; el.style.height="1123px"; await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; }))); await page(el); } }
-    pdf.setProperties({title:items.length===1?`${items[0].w.artist||""} — ${items[0].w.title||""}`:t("ficheFoot"),author:"Legacy Shaper",creator:"Legacy Shaper"});
+    await go(); pdf.setProperties({title:items.length===1?`${items[0].w.artist||""} — ${items[0].w.title||""}`:t("ficheFoot"),author:"Legacy Shaper",creator:"Legacy Shaper"});
     return pdf.output("blob"); } finally { fr.remove(); } }
-async function openFiche(items,name){ try{ const blob=await ficheBlob(items); await openPdf({title:t("sheetPdf"),name,blob}); }catch(e){ toast(t("shareErr")); } }
+function openFiche(items,name){ return openPdf({title:t("sheetPdf"),name,loading:t("pvOpenSheet"),load:alive=>ficheBlob(items,alive)}); }
 async function downloadDoc(id,force){
-  if(ARCH&&!force){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(doc){ logAccess("download",id); let blob; try{ blob=await docBlob(id); }catch(e){ toast(t("docErr")); return; }
-    if(blob) return openPdf({title:doc.name||"",name:doc.name||"document",blob}); } }
+  if(ARCH&&!force){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(doc){ logAccess("download",id); return openPdf({title:doc.name||"",name:doc.name||"document",loading:t("pvOpenDoc"),load:()=>docBlob(id)}); } }
   const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(!doc) return; logAccess("download",id);
   let blob=await idb.get("doc:"+id);
   if(!blob){ try{ const {data,error}=await sb.storage.from(CFG.bucket).download(doc.storage_path); if(error) throw error; blob=data; idb.set("doc:"+id,blob); }catch(e){ toast(t("docErr")); return; } }
@@ -2202,10 +2290,10 @@ async function start(){
   if(failed){ if(!copy) gateOffline(false); else { logAccess("session"); logAccess("open_collection"); } return; }   // no network: keep the device copy on screen
   gateEmail();
 }
-if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").catch(()=>{});
+if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(()=>{ const warm=()=>{ if(navigator.serviceWorker.controller) ["lib/pdf.min.js","lib/pdf.worker.min.js"].forEach(u=>fetch(u).catch(()=>{})); }; navigator.serviceWorker.controller?setTimeout(warm,1500):navigator.serviceWorker.addEventListener("controllerchange",()=>setTimeout(warm,1500),{once:true}); }).catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v79284859</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v622ec5d6</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
