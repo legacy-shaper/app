@@ -118,6 +118,14 @@ img{display:block;max-width:100%}
 /* iPhone: the five sections in a fixed bar at the bottom, all visible at once (nothing to scroll to find) */
 .btabs{display:none}
 .vline{cursor:pointer} .vlink{margin-top:4px;color:var(--gold-text);font-weight:600;font-size:13px}
+/* « Partager la fiche » (essai) : Fiche complète / Fiche technique */
+.ftsh{position:fixed;inset:0;z-index:95;background:rgba(10,18,12,.45);display:flex;align-items:flex-end}
+.ftsh .box{width:100%;max-width:560px;margin:0 auto;background:var(--bg);border-radius:20px 20px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom));display:grid;gap:12px;max-height:92vh;overflow:auto;box-sizing:border-box}
+.ftsh h3{margin:0;font:500 24px/1.2 var(--serif)} .ftsh .opt{display:grid;gap:3px;text-align:left;border:1.5px solid var(--line);background:var(--surface);border-radius:14px;padding:12px 14px;font:inherit;color:inherit;width:100%}
+.ftsh .opt b{font-size:15px} .ftsh .opt span,.ftsh .al{font-size:12.5px;color:var(--muted);line-height:1.45} .ftsh .opt[aria-checked="true"]{border:2px solid var(--green);background:#EEF3EC}
+.ftsh label{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line);font-size:14px} .ftsh label input{width:20px;height:20px;margin:0;flex:none;accent-color:var(--green)}
+.ftsh label small{display:block;color:var(--muted)} .ftsh .bt{display:flex;gap:10px} .ftsh .bt button{flex:1;min-height:46px;border-radius:999px;font:600 14px var(--sans)}
+.ftsh .bt .no{border:1.5px solid var(--green);background:none;color:var(--green)} .ftsh .bt .go{border:0;background:var(--green);color:var(--bg)}
 .pdfv{position:fixed;inset:0;z-index:90;background:#E9E4D8;display:flex;flex-direction:column}
 .pvtop{display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top,0px)) max(14px,env(safe-area-inset-right,0px)) 10px max(14px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
 .pvtop button{background:none;border:1px solid var(--line);border-radius:999px;padding:8px 14px;font:500 14px var(--sans,inherit);color:var(--ink)} .pvtop b{font-weight:600;font-size:14px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -186,6 +194,13 @@ select.sel{font:inherit;font-size:14px;padding:10px 12px;border-radius:10px;bord
 .card .ph{aspect-ratio:1/1;background:var(--surface-2);display:grid;place-items:center;overflow:hidden}
 .card .ph img{width:100%;height:100%;object-fit:cover}
 .card .ph{position:relative}
+/* essai « archives » (Dylan, 03/11/2026, 14 h 00-14 h 36, REGLES-ECRANS § M) : l'œuvre jamais coupée ni encadrée.
+   Vignettes : l'œuvre entière dans une case carrée blanche (image faite depuis la photo entière, fitThumb) ; écran de l'œuvre : fond blanc, sans coins arrondis */
+.arch .card .ph{background:#fff} .arch .card .ph img{object-fit:contain;width:88%;height:88%}
+.arch img[data-fit]:not([src]){visibility:hidden}
+.arch .thumbs button{background:#fff} .arch .thumbs img{object-fit:contain;padding:4px;box-sizing:border-box}
+.arch .line .th{object-fit:contain;background:#fff;border:1px solid var(--line);padding:3px;box-sizing:border-box}
+.arch .stage{background:#fff;border-radius:0;padding:24px 16px;min-height:0} .arch .stage img{max-width:100%;max-height:62vh;border-radius:0}
 .selmode .card .ph::after{content:"";position:absolute;right:8px;top:8px;width:24px;height:24px;border-radius:50%;border:2px solid #fff;background:rgba(0,0,0,.22);box-shadow:0 1px 4px rgba(0,0,0,.2)}
 .selmode .card.picked{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
 .selmode .card.picked .ph::after{content:"✓";background:var(--deep);border-color:var(--gold);color:var(--gold);font:700 13px/20px var(--sans);text-align:center}
@@ -446,7 +461,7 @@ const I18N={
    artist:"Artist",title:"Title",date:"Date",medium:"Medium",dims:"Dimensions",dimsFramed:"Framed",edition:"Edition",unique:"Unique work",ap:"Artist's proof",
    ownership:"Ownership",location:"Location",since:"since",acquisition:"Acquisition",insurance:"Insurance",condition:"Condition",provenance:"Provenance",
    exhibitions:"Exhibitions",literature:"Literature",notes:"Notes",ref:"Inventory no.",
-   back:"Back",sheetPdf:"Inventory sheet (PDF)",shareSheet:"Share the sheet",shareDl:"Sheet downloaded: attach it to your email",shareErr:"The sheet could not be created",select:"Select",selCancel:"Cancel",selAll:"Select all",selNone:"Clear",selHint:"Tap the works to include",selN:"{n} works selected · one page each, in a single PDF",selN1:"1 work selected · one page in the PDF",sheetsPdf:"Inventory sheets (PDF)",image:"Download image",prev:"Previous",next:"Next",
+   back:"Back",sheetPdf:"Inventory sheet (PDF)",shareSheet:"Share the sheet",ftFull:"Full sheet",ftFullSub:"Your inventory sheet, as you see it: price, insured value, location, condition.",ftTech:"Technical sheet",ftTechSub:"For a sale, a loan or an exhibition. Never any price, insured value, owner, location, inventory number, invoice or note.",ftAlways:"Always included: photograph, artist, title, date, medium, dimensions (cm and in), edition.",ftProv:"Provenance",ftExh:"Exhibitions",ftLit:"Literature",ftCond:"Condition report",ftLogo:"Legacy Shaper logo",ftLogoSub:"Without the logo by default",ftCancel:"Cancel",ftGo:"Share",shareDl:"Sheet downloaded: attach it to your email",shareErr:"The sheet could not be created",select:"Select",selCancel:"Cancel",selAll:"Select all",selNone:"Clear",selHint:"Tap the works to include",selN:"{n} works selected · one page each, in a single PDF",selN1:"1 work selected · one page in the PDF",sheetsPdf:"Inventory sheets (PDF)",image:"Download image",prev:"Previous",next:"Next",
    crating:"Packing & crate",crStatus:"Status",crType:"Packing",crDims:"Exterior dimensions",crWeight:"Gross weight",crWhere:"Crate",crHandling:"Handling",crOrient:"Transport",crRef:"Crate marking",crFeat:"Specifications",crPkg:"Package",crPhotos:"Photos and packing list",
    crS:{none:"Not packed",packed:"Packed",todo:"Crate to be made",making:"Crate being made"},
    crT:{soft:"Soft packing",tframe:"T-frame",travel:"Travel frame",museum:"International museum crate",slatted:"Slatted crate",climate:"Climate-controlled crate",solander:"Solander box (works on paper)",sculpture:"Sculpture / plinth crate"},
@@ -512,7 +527,7 @@ const I18N={
    artist:"Artiste",title:"Titre",date:"Date",medium:"Technique",dims:"Dimensions",dimsFramed:"Avec cadre",edition:"Édition",unique:"Œuvre unique",ap:"Épreuve d’artiste",
    ownership:"Propriété",location:"Localisation",since:"depuis le",acquisition:"Acquisition",insurance:"Assurance",condition:"État",provenance:"Provenance",
    exhibitions:"Expositions",literature:"Bibliographie",notes:"Notes",ref:"N° d’inventaire",
-   back:"Retour",sheetPdf:"Fiche d’inventaire (PDF)",shareSheet:"Partager la fiche",shareDl:"Fiche téléchargée : joignez-la à votre e-mail",shareErr:"La fiche n’a pas pu être créée",select:"Sélectionner",selCancel:"Annuler",selAll:"Tout sélectionner",selNone:"Tout désélectionner",selHint:"Touchez les œuvres à inclure",selN:"{n} œuvres sélectionnées · une page chacune, dans un seul PDF",selN1:"1 œuvre sélectionnée · une page dans le PDF",sheetsPdf:"Fiches d’inventaire (PDF)",image:"Télécharger l’image",prev:"Précédente",next:"Suivante",
+   back:"Retour",sheetPdf:"Fiche d’inventaire (PDF)",shareSheet:"Partager la fiche",ftFull:"Fiche complète",ftFullSub:"Votre fiche d’inventaire, telle que vous la voyez : prix, valeur d’assurance, localisation, constat.",ftTech:"Fiche technique",ftTechSub:"Pour une vente, un prêt ou une exposition. Jamais de prix, de valeur d’assurance, de propriétaire, de localisation, de numéro d’inventaire, de facture ni de note.",ftAlways:"Toujours : photo, artiste, titre, date, technique, dimensions (cm et in), édition.",ftProv:"Provenance",ftExh:"Expositions",ftLit:"Bibliographie",ftCond:"Constat d’état",ftLogo:"Logo Legacy Shaper",ftLogoSub:"Sans logo par défaut",ftCancel:"Annuler",ftGo:"Partager",shareDl:"Fiche téléchargée : joignez-la à votre e-mail",shareErr:"La fiche n’a pas pu être créée",select:"Sélectionner",selCancel:"Annuler",selAll:"Tout sélectionner",selNone:"Tout désélectionner",selHint:"Touchez les œuvres à inclure",selN:"{n} œuvres sélectionnées · une page chacune, dans un seul PDF",selN1:"1 œuvre sélectionnée · une page dans le PDF",sheetsPdf:"Fiches d’inventaire (PDF)",image:"Télécharger l’image",prev:"Précédente",next:"Suivante",
    crating:"Emballage & caisse",crStatus:"État",crType:"Emballage",crDims:"Dimensions extérieures",crWeight:"Poids brut",crWhere:"Caisse",crHandling:"Manutention",crOrient:"Transport",crRef:"Marquage de la caisse",crFeat:"Caractéristiques",crPkg:"Colis",crPhotos:"Photos et fiche de colisage",
    crS:{none:"Sans emballage",packed:"Emballée",todo:"Caisse à fabriquer",making:"Caisse en fabrication"},
    crT:{soft:"Soft packing",tframe:"T-frame",travel:"Travel frame",museum:"Caisse internationale (musée)",slatted:"Caisse claire-voie",climate:"Caisse climatique",solander:"Boîte Solander (papier)",sculpture:"Caisse sculpture / socle"},
@@ -573,11 +588,13 @@ const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;"
    tant que Dylan n'a pas fait son essai sur l'iPhone ; allumé seulement par ?essai=archives (gardé pour la session de l'onglet). */
 const ARCH=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai"); if(q==="archives"){ sessionStorage.setItem("ls-essai-archives","1"); return true; }
   if(q==="off"){ sessionStorage.removeItem("ls-essai-archives"); return false; } return sessionStorage.getItem("ls-essai-archives")==="1"; }catch(e){ return false; } })();
-/* « (b. 1986) » en français : « (né en 1986) » / « (née en 1986) » ; sans information, « (né / née en 1986) » ; « (b. 1986) » reste en anglais (Dylan, 03/11/2026, A1).
+/* « (b. 1986) » en français : « (né en 1986) » / « (née en 1986) » ; sexe inconnu : l'année seule « (1986) » (on n'invente rien) ; « (b. 1986) » reste en anglais ;
+   « (1941–2018) » inchangé (Dylan, 03/11/2026, A1 puis 14 h 36 : « né / née », sinon on croit que c'est l'année de l'œuvre).
    Les artistes de la démo sont fictifs : leur genre est connu ici ; pour une vraie collection, la base ne le connaît pas encore. */
+if(ARCH) document.documentElement.classList.add("arch");
 const DEMO_GENDER={"Élise Marchetti":"f","Henrik Aalto-Lind":"m","Yuna Takemori":"f","Matteo Corvani":"m","Lior Ben-Avram":"m","Céleste Moreau-Vidal":"f","Nadia Karami":"f","Arturo Velarde":"m"};
 function artistTxt(v){ const s=String(v==null?"":v); if(!ARCH||LANG!=="fr") return s;
-  return s.replace(/\(\s*b\.\s*(\d{4})\s*\)/,(m,y)=>{ const g=(typeof S!=="undefined"&&S&&S.cid===DEMO_COLL)?DEMO_GENDER[s.split("(")[0].trim()]:""; return `(${g==="f"?"née":g==="m"?"né":"né / née"} en ${y})`; }); }
+  return s.replace(/\(\s*b\.\s*(\d{4})\s*\)/,(m,y)=>{ const g=(typeof S!=="undefined"&&S&&S.cid===DEMO_COLL)?DEMO_GENDER[s.split("(")[0].trim()]:""; return g==="f"?`(née en ${y})`:g==="m"?`(né en ${y})`:`(${y})`; }); }
 /* un seul format de montant partout (Dylan, 02/11/2026, 4 a étendu) : « 780 000 EUR » en français, « EUR 780,000 » en anglais, espaces insécables */
 const fmtCode=(v,cur)=>{ const n=Math.round(+v), c=cur||"USD", a=String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,LANG==="fr"?"\u00a0":",");
   return LANG==="fr"?`${n<0?"−":""}${a}\u00a0${c}`:`${c}\u00a0${n<0?"−":""}${a}`; };
@@ -914,8 +931,10 @@ function brandCollection(coll){
     setTimeout(()=>location.reload(),50);
   }
 }
+let fitObs=null;
 function render(){
   const d=S.data; if(!d) return;
+  if(ARCH&&!fitObs&&"MutationObserver" in window){ fitObs=new MutationObserver(()=>fitFill($("#main"))); fitObs.observe($("#main"),{childList:true,subtree:true}); }
   brandCollection(d.coll);
   $("#collName").textContent=d.coll.name||"";
   $("#collSub").textContent=d.coll.subtitle||"Collection Office";
@@ -933,7 +952,7 @@ function render(){
   else if(S.tab==="expenses") m.innerHTML=viewExpenses();
   else if(S.tab==="archives") m.innerHTML=viewArchives();
   else m.innerHTML=viewDocs();
-  bindMain();
+  bindMain(); fitFill(m);
 }
 function renderPreview(){ const pv=$("#pvBar"); if(!pv) return; pv.hidden=!S.isAdmin; if(!S.isAdmin){ pv.innerHTML=""; return; }
   pv.innerHTML=`<span>${esc(t("pvLead"))} <b>${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</b> · ${esc(t("pvRO"))}</span>${S.collections.length>1?`<button type="button" id="pvSwitch">${esc(t("switchColl"))}</button>`:""}`;
@@ -942,8 +961,23 @@ function renderStatus(){ const s=$("#status"); if(!s) return; s.classList.toggle
   s.querySelector("span").textContent=S.online?`${t("live")} · ${fmtStamp(S.stamp)}`:`${t("offline")} ${fmtStamp(S.stamp)}`; }
 const works=()=>(S.data&&S.data.works)||[];
 const thumbOf=w=>w.thumb||"";
+/* essai : la vignette d'une œuvre est faite sur l'appareil depuis sa photo entière (la vignette enregistrée est recadrée en carré par The Legacy) ;
+   gardée sur l'appareil (« fit: ») ; sans photo entière, la vignette enregistrée. */
+const FIT={}; let fitQ=Promise.resolve();
+function firstView(id){ return ((S.data&&S.data.views)||[]).filter(v=>v.artwork_id===id).sort((a,b)=>(a.sort||0)-(b.sort||0)||String(a.created_at).localeCompare(String(b.created_at)))[0]; }
+function fitDraw(src){ return new Promise(res=>{ const im=new Image(); im.onload=()=>{ const M=480, k=Math.min(1,M/Math.max(im.naturalWidth,im.naturalHeight)), c=document.createElement("canvas");
+    c.width=Math.max(1,Math.round(im.naturalWidth*k)); c.height=Math.max(1,Math.round(im.naturalHeight*k)); const x=c.getContext("2d"); x.imageSmoothingQuality="high"; x.drawImage(im,0,0,c.width,c.height);
+    try{ res(c.toDataURL("image/jpeg",0.86)); }catch(e){ res(null); } }; im.onerror=()=>res(null); im.src=src; }); }
+async function fitThumb(w){ if(!w) return ""; if(FIT[w.id]) return FIT[w.id]; const v=firstView(w.id); if(!v) return thumbOf(w);
+  const key="fit:"+v.id; let u=await idb.get(key).catch(()=>null);
+  if(!u){ const p=await viewPhoto(v.id); if(!p) return thumbOf(w); u=await fitDraw(p); if(!u) return thumbOf(w); idb.set(key,u).catch(()=>{}); }
+  FIT[w.id]=u; return u; }
+function fitFill(root){ if(!ARCH||!root) return; root.querySelectorAll("img[data-fit]:not([data-fitdone])").forEach(im=>{ im.dataset.fitdone="1"; const id=im.dataset.fit;
+  if(FIT[id]){ im.src=FIT[id]; return; }
+  fitQ=fitQ.then(async()=>{ const u=await fitThumb(workById(id)); if(u&&im.isConnected) im.src=u; }).catch(()=>{}); }); }
+const fitImg=(w,cls)=>ARCH?`<img ${cls?`class="${cls}" `:""}data-fit="${esc(w.id)}" ${FIT[w.id]?`src="${FIT[w.id]}"`:""} alt="">`:`<img ${cls?`class="${cls}" `:""}loading="lazy" src="${thumbOf(w)}" alt="">`;
 const workById=id=>works().find(w=>w.id===id);
-function cardHtml(w){ return `<button class="card ${S.sel&&S.sel.has(w.id)?"picked":""}" data-w="${esc(w.id)}" ${S.sel?`aria-pressed="${S.sel.has(w.id)}"`:""}><div class="ph">${thumbOf(w)?`<img loading="lazy" src="${thumbOf(w)}" alt="">`:""}</div>
+function cardHtml(w){ return `<button class="card ${S.sel&&S.sel.has(w.id)?"picked":""}" data-w="${esc(w.id)}" ${S.sel?`aria-pressed="${S.sel.has(w.id)}"`:""}><div class="ph">${thumbOf(w)||(ARCH&&firstView(w.id))?fitImg(w):""}</div>
   <div class="tx"><div class="ar">${esc(artistTxt(w.artist))}</div><div class="ti"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div>${w.location_text?`<div class="lo">${esc(w.location_text)}</div>`:""}${condLast(w)?`<div class="cr">${esc(t("condLine"))} · ${esc(fmtDate(condLast(w).date))}</div>`:""}</div></button>`; }
 /* Condition reports shared by Legacy Shaper (SQL 022, 15 Oct 2026): artworks.condition_reports (newest first) + documents
    condition_report (PDF) / condition_photo (close-ups). Opened, shared or downloaded from the work's page. */
@@ -1020,7 +1054,7 @@ function viewLocations(){
   return Object.keys(g).sort().map(k=>{ const i=k.indexOf(" · "); const kind=i>0?k.slice(0,i):"", place0=i>0?k.slice(i+3):k, place=place0.charAt(0).toUpperCase()+place0.slice(1); const n=g[k].length;
     return `<section class="block locblock"><div class="lochead"><svg class="pin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M12 21s-6.5-6.2-6.5-11a6.5 6.5 0 0113 0c0 4.8-6.5 11-6.5 11z"/><circle cx="12" cy="10" r="2.3"/></svg>
       <div class="lt"><h3>${esc(place)}</h3>${kind?`<span class="kind">${esc(kind)}</span>`:""}</div><span class="cnt">${n} ${esc((n>1?t("nWorks"):t("oneWork")).toLowerCase())}</span></div>
-    ${g[k].map(w=>`<button class="line" data-w="${esc(w.id)}">${thumbOf(w)?`<img class="th" src="${thumbOf(w)}" alt="">`:`<span class="th"></span>`}
+    ${g[k].map(w=>`<button class="line" data-w="${esc(w.id)}">${thumbOf(w)?(ARCH?fitImg(w,"th"):`<img class="th" src="${thumbOf(w)}" alt="">`):`<span class="th"></span>`}
       <span class="mid"><b>${esc(artistTxt(w.artist))}</b><div><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}${w.location_since?` · ${esc(t("since"))} ${esc(fmtDate(w.location_since))}`:""}</div></span></button>`).join("")}</section>`; }).join("")||`<div class="empty">—</div>`;
 }
 function expYears(){ return [...new Set(((S.data&&S.data.expenses)||[]).map(e=>String(e.date||"").slice(0,4)).filter(Boolean))].sort().reverse(); }
@@ -1033,7 +1067,7 @@ function expByWork(per){
   const g={}; per.forEach(e=>{ (g[e.artwork_id]=g[e.artwork_id]||[]).push(e); });
   const ids=Object.keys(g).sort((a,b)=>{ const wa=workById(a)||{}, wb=workById(b)||{}; return String(wa.artist||"").localeCompare(String(wb.artist||""))||String(wa.title||"").localeCompare(String(wb.title||"")); });
   return ids.map(id=>{ const w=workById(id); const list=g[id];
-    const head=w?`<button class="line whead" data-w="${esc(id)}">${thumbOf(w)?`<img class="th" src="${thumbOf(w)}" alt="">`:`<span class="th"></span>`}
+    const head=w?`<button class="line whead" data-w="${esc(id)}">${thumbOf(w)?(ARCH?fitImg(w,"th"):`<img class="th" src="${thumbOf(w)}" alt="">`):`<span class="th"></span>`}
         <span class="mid"><b>${esc(artistTxt(w.artist))}</b><div><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div></span><span class="amt">${esc(curLine(sumByCur(list,"amount","currency")))}<div>${list.length} ${esc(list.length>1?t("nExp"):t("oneExp"))}</div></span></button>`
       :`<div class="line whead"><span class="mid"><b>—</b></span><span class="amt">${esc(curLine(sumByCur(list,"amount","currency")))}</span></div>`;
     return `<div class="wgrp">${head}${list.map(e=>expLine(e,"group")).join("")}</div>`; }).join("");
@@ -1145,7 +1179,7 @@ async function openWork(id,keep){
   const d=$("#detail"); d.hidden=false; if(!keep) d.scrollTop=0; document.body.style.overflow="hidden";
   d.innerHTML=`<div class="dtop"><button id="dBack">← ${esc(t("back"))}</button><span class="sp"></span>
       ${idx>0?`<button id="dPrev" aria-label="${esc(t("prev"))}">‹</button>`:""}${idx>=0&&idx<list.length-1?`<button id="dNext" aria-label="${esc(t("next"))}">›</button>`:""}</div>
-    <div class="dwrap"><div><div class="stage" id="dStage">${thumbOf(w)?`<img id="dImg" src="${thumbOf(w)}" alt="">`:""}</div>
+    <div class="dwrap"><div><div class="stage" id="dStage">${(ARCH&&views[0])?(FIT[w.id]?`<img id="dImg" src="${FIT[w.id]}" alt="">`:""):thumbOf(w)?`<img id="dImg" src="${thumbOf(w)}" alt="">`:""}</div>
       ${(views.length>1||scOK)?`<div class="thumbs">${views.map((v,i)=>`<button data-v="${esc(v.id)}" class="${i===0?"on":""}"><img alt="" data-vt="${esc(v.id)}"></button>`).join("")}${scOK?`<button class="sct" id="dScTile" aria-label="${esc(t("atScale"))}"><img alt="" id="dScThumb"><span>${esc(t("scaleTile"))}</span></button>`:""}</div>`:""}
       ${scOK?`<div class="scbar" id="dScBar" hidden><div class="sw">${ROOM.walls.map(([k,c])=>`<button data-scwall="${k}" title="${esc(t("walls")[k])}" aria-label="${esc(t("walls")[k])}" style="background:${c}" class="${k===scSet.wall?"on":""}"></button>`).join("")}</div>
         ${(canStand(w)&&ON_FLOOR.test(w.category||""))?`<span class="seg"><button data-plinth="none" class="${scSet.plinth==="base"?"":"on"}">${esc(t("plinthNone"))}</button><button data-plinth="base" class="${scSet.plinth==="base"?"on":""}">${esc(t("plinthBase"))}</button></span>`:""}
@@ -1195,7 +1229,7 @@ async function openWork(id,keep){
   d.querySelectorAll("[data-vt]").forEach(async im=>{ const p=await viewPhoto(im.dataset.vt); if(p) im.src=p; });
   if($("#dAsk")) $("#dAsk").onclick=()=>openChat(id);
   if($("#dRoom")) $("#dRoom").onclick=async()=>openRoom(w, current?await viewPhoto(current):thumbOf(w));
-  $("#dShare").onclick=async()=>shareSheet(w, current?await viewPhoto(current):thumbOf(w));
+  $("#dShare").onclick=async()=>{ if(ARCH) return shareChoice(w,async()=>current?await viewPhoto(current):thumbOf(w),async()=>(scOK&&scalePdfGet(id))?await scaleURL():""); return shareSheet(w, current?await viewPhoto(current):thumbOf(w)); };
   $("#dPdf").onclick=async()=>{ const img=current?await viewPhoto(current):thumbOf(w), sc=(scOK&&scalePdfGet(id))?await scaleURL():"";
     if(ARCH) return openFiche([{w,img,scale:sc}],fileBase(w)+" - "+t("ficheFoot")+".pdf"); return printSheet(w,img,sc); };
   $("#dImgDl").onclick=async()=>{ const p=onScale?await scaleURL():((current&&await viewPhoto(current))||thumbOf(w)); if(!p) return; const a=document.createElement("a"); a.href=p; a.download=fileBase(w)+(onScale?" - "+t("scaleTile"):"")+".jpg"; document.body.appendChild(a); a.click(); a.remove(); };
@@ -1208,7 +1242,7 @@ const arcThumb=a=>{ const c=a.card||{}; const v=(Array.isArray(c.views)?c.views:
 const arcPhoto=a=>{ const c=a.card||{}; const v=(Array.isArray(c.views)?c.views:[]).slice().sort((x,y)=>(x.sort||0)-(y.sort||0)).find(x=>x&&x.photo); return (v&&v.photo)||c.thumb||""; };
 function viewArchives(){ const A=archives().slice().sort((x,y)=>String(y.sold_at).localeCompare(String(x.sold_at)));
   return `<p class="arcintro" id="arcIntro">${esc(t("arcIntro"))}</p><div class="grid" id="arcGrid">${A.map(a=>{ const c=a.card||{};
-    return `<button class="card" data-arc="${esc(a.id)}"><div class="ph">${arcThumb(a)?`<img loading="lazy" src="${esc(arcThumb(a))}" alt="">`:""}</div>
+    return `<button class="card" data-arc="${esc(a.id)}"><div class="ph">${(arcPhoto(a)||arcThumb(a))?`<img loading="lazy" src="${esc(arcPhoto(a)||arcThumb(a))}" alt="">`:""}</div>
       <div class="tx"><div class="ar">${esc(artistTxt(c.artist))}</div><div class="ti"><i>${esc(c.title)}</i>${c.year?`, ${esc(c.year)}`:""}</div><span class="sold">${esc(t("arcSold"))} ${esc(arcDate(a.sold_at))}</span></div></button>`; }).join("")}</div>`; }
 function openArchive(id,keep){ const a=archives().find(x=>x.id===id); if(!a) return; const w=a.card||{}; S.arcOpen=id; S.openId=null; logAccess("open_work",a.artwork_id);
   const acq=[w.acquisition_date?fmtDate(w.acquisition_date):"", w.acquisition_price!=null&&w.acquisition_price!==""?fmtMoney(w.acquisition_price,w.acquisition_currency):"", w.acquisition_source||""].filter(Boolean).map(esc).join("\n");
@@ -1373,22 +1407,29 @@ function openInvoicePdf(id){ const i=((S.data&&S.data.invoices)||[]).find(x=>x.i
    trop long), aucune marge du navigateur, un seul pied de page « Legacy Shaper · Fiche d'inventaire · <collection> », jamais la vente dans le pied de page. */
 const FONTS_CSS="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Hanken+Grotesk:wght@300;400;500;600&display=swap";   // = le lien de la page (gardé hors ligne)
 const NF_FONTS=['500 27px "Cormorant Garamond"','italic 500 27px "Cormorant Garamond"','400 12px "Hanken Grotesk"','600 15px "Hanken Grotesk"'];
-const NF_CSS=`.nfiche{width:794px;height:1123px;box-sizing:border-box;padding:46px 64px 0;background:#fff;color:#16241A;font-family:"Hanken Grotesk",Helvetica,Arial,sans-serif;display:flex;flex-direction:column}
-.nfl{height:46px;align-self:center;margin-bottom:22px} .nfimg{display:flex;align-items:center;justify-content:center;background:#F7F4EC;border-radius:4px;flex:none} .nfimg img{max-height:calc(100% - 28px);max-width:92%;object-fit:contain}
-.nfh{margin:20px 0 12px} .nfa{font-size:15px;font-weight:600} .nft{font:500 27px/1.2 "Cormorant Garamond",Georgia,serif;margin-top:2px} .nft i{font-style:italic}
+const NF_CSS=`.nfiche{width:794px;height:1123px;box-sizing:border-box;padding:0 72px;background:#fff;color:#16241A;font-family:"Hanken Grotesk",Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center}
+.nfiche.long{height:auto;justify-content:flex-start;padding-top:72px;padding-bottom:72px} .nfin{display:flex;flex-direction:column}
+.nfl{height:76px;align-self:center;margin-bottom:57px} .nfimg{display:flex;align-items:center;justify-content:center;flex:none} .nfimg img{max-height:100%;max-width:100%;object-fit:contain;display:block}
+.nfh{margin:30px 0 12px} .nfa{font-size:15px;font-weight:600} .nft{font:500 27px/1.2 "Cormorant Garamond",Georgia,serif;margin-top:2px} .nft i{font-style:italic}
 .nfdl{margin:0;column-count:2;column-gap:40px} .nff{break-inside:avoid;padding:7px 0;border-top:1px solid #E2D9C6} .nff dt{font-size:9.5px;letter-spacing:2.2px;text-transform:uppercase;color:#7A6332;margin:0 0 2px} .nff dd{margin:0;font-size:12.5px;line-height:1.45;white-space:pre-line}
-.nffoot{margin-top:auto;border-top:1px solid #B9A46A;padding:10px 0 22px;text-align:center;font-size:9.5px;letter-spacing:1.6px;text-transform:uppercase;color:#6A6656}
 `;
 function ficheRows(w,arc){ const soldNet=arc&&w.soldNet&&w.soldNet.amount?fmtMoney(w.soldNet.amount,w.soldNet.currency):"";
   return [["medium",w.medium],["dims",dimsLine(w.dimensions)],["dimsFramed",dimsLine(w.dimensions_framed)],["edition",editionLine(w)],["ownership",ownershipLine(w)],
     ["__sold",soldNet],["location",arc?"":(w.location_text||"")+(w.location_since?` (${t("since")} ${fmtDate(w.location_since)})`:"")],
     ["acquisition",[w.acquisition_date?fmtDate(w.acquisition_date):"",w.acquisition_price!=null&&w.acquisition_price!==""?fmtMoney(w.acquisition_price,w.acquisition_currency):"",w.acquisition_source||""].filter(Boolean).join("\n")],
     ["insurance",w.insured_value!=null&&w.insured_value!==""?fmtMoney(w.insured_value,w.insured_currency):""],["condition",w.condition],["provenance",w.provenance],["exhibitions",w.exhibitions],["literature",w.literature],["ref",w.ref]].filter(r=>r[1]); }
-function ficheHTML(w,img,arc,imgH){ const rows=ficheRows(w,arc);
-  return `<div class="nfiche"><img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper">${img?`<div class="nfimg" style="height:${imgH}px"><img src="${img}" alt=""></div>`:""}
+/* Fiche technique (Dylan, 03/11/2026, « Partager la fiche ») : toujours technique, dimensions, édition ; cases provenance, expositions, bibliographie, constat ;
+   JAMAIS prix, valeur d'assurance, propriétaire, localisation, n° d'inventaire, factures, notes. « Signature et inscriptions » : plus tard. */
+const FT_DEF={prov:false,exh:true,lit:true,cond:true,logo:false};
+function techRows(w,o){ o=Object.assign({},FT_DEF,o||{});
+  return [["medium",w.medium],["dims",dimsLine(w.dimensions)],["dimsFramed",dimsLine(w.dimensions_framed)],["edition",editionLine(w)],
+    o.prov&&["provenance",w.provenance],o.exh&&["exhibitions",w.exhibitions],o.lit&&["literature",w.literature],o.cond&&["ftCond",w.condition]].filter(r=>r&&r[1]); }
+/* Une seule mise en page pour toutes les fiches (REGLES-ECRANS § M) : logo ~2 cm (76 px), 57 px avant l'œuvre ; l'œuvre seule, entière, sans cadre ;
+   marges haut / bas égales ; RIEN en bas (ni pied de page, ni droit d'auteur, ni filet). */
+function ficheHTML(w,img,arc,imgH,o){ o=o||{}; const rows=o.tech?techRows(w,o.opts):ficheRows(w,arc), logo=o.tech?!!(o.opts&&o.opts.logo):true;
+  return `<div class="nfiche${o.tech?" tech":""}"><div class="nfin">${logo?`<img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper">`:""}${img?`<div class="nfimg" style="height:${imgH}px"><img src="${img}" alt=""></div>`:""}
     <div class="nfh"><div class="nfa">${esc(artistTxt(w.artist))}</div><div class="nft"><i>${esc(w.title)}</i>${w.year?`, ${esc(w.year)}`:""}</div></div>
-    <dl class="nfdl">${rows.map(r=>`<div class="nff"><dt>${esc(r[0]==="__sold"?t("arcSoldLS"):t(r[0]))}</dt><dd>${esc(r[1])}</dd></div>`).join("")}</dl>
-    <div class="nffoot">Legacy Shaper · ${esc(t("ficheFoot"))} · ${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</div></div>`; }
+    <dl class="nfdl">${rows.map(r=>`<div class="nff"><dt>${esc(r[0]==="__sold"?t("arcSoldLS"):t(r[0]))}</dt><dd>${esc(r[1])}</dd></div>`).join("")}</dl></div></div>`; }
 /* A8 : l'image de la fiche est encodée en JPEG dans un fil séparé (Safari l'encode sinon sur l'écran, qui ne répond plus) ; repli : toBlob */
 let jpgW=null, jpgN=0; const jpgCb={};
 function jpgWorker(){ if(jpgW!==null) return jpgW;
@@ -1449,19 +1490,43 @@ async function ficheBlob(items,alive){ const T=window.__fbT=[]; const mark=k=>T.
     await Promise.race([Promise.all(NF_FONTS.map(f=>fd.fonts.load(f).catch(()=>0))),new Promise(r=>setTimeout(r,3000))]);
     if(fd.fonts&&fd.fonts.ready) await fd.fonts.ready; mark("fonts");
     window.__fichePages=[];
-    for(const it of items){ let imgH=430, el;
-      for(;;){ st.innerHTML=ficheHTML(it.w,it.img,it.arc,imgH); el=st.firstElementChild;
-        await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; })));
-        if(el.scrollHeight<=1123||!it.img||imgH<=260) break; imgH=Math.max(260,imgH-(el.scrollHeight-1123)-4); }
-      window.__fichePages.push({text:el.innerText,height:el.scrollHeight});
-      if(el.scrollHeight<=1123){ el.style.height="1123px"; await page(el); }
+    for(const it of items){ const fo={tech:!!it.tech,opts:it.opts}, logo=it.tech?!!(it.opts&&it.opts.logo):true, M=it.tech&&logo?100:80; let imgH=300, el;
+      const load=async()=>{ el=st.firstElementChild; await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; }))); };
+      st.innerHTML=ficheHTML(it.w,it.img,it.arc,imgH,fo); await load();
+      if(it.img){ const im=el.querySelector(".nfimg img"), inH=el.querySelector(".nfin").offsetHeight, byW=im&&im.naturalWidth?650*im.naturalHeight/im.naturalWidth:618;
+        imgH=Math.round(Math.max(260,Math.min(618,byW,imgH+(1123-2*M)-inH)));   // l'œuvre prend toute la hauteur libre, jamais plus de 55 % de la page
+        st.innerHTML=ficheHTML(it.w,it.img,it.arc,imgH,fo); await load(); }
+      if(el.querySelector(".nfin").offsetHeight>1123-48) el.classList.add("long");   // texte vraiment trop long : 2 pages
+      const nin=el.querySelector(".nfin"), ir=el.querySelector(".nfimg img"), rr=el.getBoundingClientRect(), nr=nin.getBoundingClientRect(), last=nin.lastElementChild;
+      window.__fichePages.push({text:el.innerText,height:el.classList.contains("long")?el.scrollHeight:1123,tech:!!it.tech,logo:!!el.querySelector(".nfl"),
+        top:Math.round(nr.top-rr.top),bottom:Math.round(rr.bottom-nr.bottom),last:last&&last.className,img:ir?{w:ir.getBoundingClientRect().width,h:ir.getBoundingClientRect().height,nw:ir.naturalWidth,nh:ir.naturalHeight}:null});
+      if(!el.classList.contains("long")){ await page(el); }
       else{ el.style.height="auto"; const H=el.scrollHeight; await go(); const c=await drawFiche(el,H,go);   // texte vraiment trop long : 2 pages
         for(let y=0;y<H;y+=1123){ const part=document.createElement("canvas"); part.width=c.width; part.height=Math.min(1123,H-y)*2; part.getContext("2d").drawImage(c,0,y*2,c.width,part.height,0,0,c.width,part.height);
           const im=await jpg(part); await go(); if(!first) pdf.addPage(); first=false; pdf.addImage(im,"JPEG",0,0,PW,PH*(part.height/2/1123)); } }
-      if(it.scale){ st.innerHTML=`<div class="nfiche"><img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper"><div class="nfimg" style="height:760px"><img src="${it.scale}" alt=""></div><div class="nfh"><div class="nfa">${esc(artistTxt(it.w.artist))}</div><div class="nft"><i>${esc(it.w.title)}</i> · ${esc(t("atScale"))}</div></div><div class="nffoot">Legacy Shaper · ${esc(t("ficheFoot"))} · ${esc((S.data&&S.data.coll&&S.data.coll.name)||"")}</div></div>`;
-        el=st.firstElementChild; el.style.height="1123px"; await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; }))); await page(el); } }
+      if(it.scale){ st.innerHTML=`<div class="nfiche"><div class="nfin"><img class="nfl" src="${LOGO_GREEN}" alt="Legacy Shaper"><div class="nfimg" style="height:700px"><img src="${it.scale}" alt=""></div><div class="nfh"><div class="nfa">${esc(artistTxt(it.w.artist))}</div><div class="nft"><i>${esc(it.w.title)}</i> · ${esc(t("atScale"))}</div></div></div></div>`;
+        el=st.firstElementChild; await Promise.all([...el.querySelectorAll("img")].map(im=>im.complete?0:new Promise(r=>{ im.onload=im.onerror=r; }))); await page(el); } }
     await go(); pdf.setProperties({title:items.length===1?`${items[0].w.artist||""} — ${items[0].w.title||""}`:t("ficheFoot"),author:"Legacy Shaper",creator:"Legacy Shaper"});
     return pdf.output("blob"); } finally { fr.remove(); } }
+/* « Partager la fiche » (essai, Dylan, 03/11/2026) : sur chaque œuvre (pas dans les Archives), « Fiche complète » ou « Fiche technique » ;
+   la fiche s'ouvre ensuite dans la visionneuse (« Partager », « Télécharger »). */
+function shareChoice(w,getImg,getScale){ const old=$("#ftSheet"); if(old) old.remove();
+  const o=Object.assign({},FT_DEF); let tech=false;
+  const v=document.createElement("div"); v.id="ftSheet"; v.className="ftsh"; v.setAttribute("role","dialog"); v.setAttribute("aria-modal","true");
+  const ck=(k,lab,sub)=>`<label><input type="checkbox" data-ft="${k}" ${o[k]?"checked":""}><span>${esc(lab)}${sub?`<small>${esc(sub)}</small>`:""}</span></label>`;
+  const draw=()=>{ v.innerHTML=`<div class="box"><h3>${esc(t("shareSheet"))}</h3>
+    <button type="button" class="opt" id="ftFull" role="radio" aria-checked="${!tech}"><b>${tech?"○":"◉"} ${esc(t("ftFull"))}</b><span>${esc(t("ftFullSub"))}</span></button>
+    <button type="button" class="opt" id="ftTech" role="radio" aria-checked="${tech}"><b>${tech?"◉":"○"} ${esc(t("ftTech"))}</b><span>${esc(t("ftTechSub"))}</span></button>
+    ${tech?`<div class="al">${esc(t("ftAlways"))}</div><div>${ck("prov",t("ftProv"))}${ck("exh",t("ftExh"))}${ck("lit",t("ftLit"))}${ck("cond",t("ftCond"))}${ck("logo",t("ftLogo"),t("ftLogoSub"))}</div>`:""}
+    <div class="bt"><button type="button" class="no" id="ftNo">${esc(t("ftCancel"))}</button><button type="button" class="go" id="ftGo">${esc(t("ftGo"))}</button></div></div>`;
+    v.querySelector("#ftFull").onclick=()=>{ tech=false; draw(); }; v.querySelector("#ftTech").onclick=()=>{ tech=true; draw(); };
+    v.querySelectorAll("[data-ft]").forEach(c=>c.onchange=()=>{ o[c.dataset.ft]=c.checked; });
+    v.querySelector("#ftNo").onclick=()=>v.remove();
+    v.querySelector("#ftGo").onclick=()=>{ v.remove(); const opts=Object.assign({},o);
+      if(tech) return openPdf({title:t("ftTech"),name:fileBase(w)+" - "+t("ftTech")+".pdf",loading:t("pvOpenSheet"),load:async alive=>ficheBlob([{w,img:await getImg(),tech:true,opts}],alive)});
+      return openPdf({title:t("sheetPdf"),name:fileBase(w)+" - "+t("ficheFoot")+".pdf",loading:t("pvOpenSheet"),load:async alive=>ficheBlob([{w,img:await getImg(),scale:await getScale()}],alive)}); }; };
+  v.addEventListener("click",e=>{ if(e.target===v) v.remove(); });
+  draw(); document.body.appendChild(v); return v; }
 function openFiche(items,name){ return openPdf({title:t("sheetPdf"),name,loading:t("pvOpenSheet"),load:alive=>ficheBlob(items,alive)}); }
 async function downloadDoc(id,force){
   if(ARCH&&!force){ const doc=((S.data&&S.data.docs)||[]).find(d=>d.id===id); if(doc){ logAccess("download",id); return openPdf({title:doc.name||"",name:doc.name||"document",loading:t("pvOpenDoc"),load:()=>docBlob(id)}); } }
@@ -2293,7 +2358,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(()=>{ const warm=()=>{ if(navigator.serviceWorker.controller) ["lib/pdf.min.js","lib/pdf.worker.min.js"].forEach(u=>fetch(u).catch(()=>{})); }; navigator.serviceWorker.controller?setTimeout(warm,1500):navigator.serviceWorker.addEventListener("controllerchange",()=>setTimeout(warm,1500),{once:true}); }).catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v622ec5d6</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">ve7707bed</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>

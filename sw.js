@@ -1,6 +1,6 @@
 /* Legacy Shaper — client app service worker.
    The app opens instantly and offline; collection data never passes through this cache (Supabase is always live). */
-const VERSION = "ls-client-622ec5d6";
+const VERSION = "ls-client-e7707bed";
 const APP = ["./", "./index.html", "./manifest.webmanifest", "./apple-touch-icon.png", "./icon-192.png", "./icon-512.png", "./room-chair.webp", "./room-parquet.jpg"];
 // pdf.js (1,4 Mo) n'est pas dans l'installation (elle doit rester rapide) : l'app le précharge dès qu'elle est ouverte, et le « fetch » ci-dessous le garde (hors ligne ensuite)
 const EXTERNAL = [
