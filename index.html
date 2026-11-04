@@ -341,6 +341,9 @@ body.selecting #main{padding-bottom:110px}
 #room .rbar .tb.pri{background:var(--gold,#C4A052);color:var(--deep,#1B3924);border-color:var(--gold,#C4A052);font-weight:600}
 #room[hidden]{display:none}
 
+/* essai « bordeaux » (écran seulement) : la salle suit --deep ; la bulle d'aide aussi */
+html.bord #room .hint{background:rgba(47,22,28,.72)}
+
 
 /* ---------- assistant ---------- */
 #chatFab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(18px + var(--safe-b));z-index:25;display:flex;align-items:center;gap:8px;background:var(--deep);color:var(--gold);border:1px solid rgba(196,160,82,.55);border-radius:999px;padding:11px 16px 11px 13px;font-size:13.5px;box-shadow:0 10px 28px rgba(27,57,36,.28)}
@@ -409,7 +412,21 @@ body.selecting #main{padding-bottom:110px}
   #print .pscale{break-before:page;page-break-before:always;text-align:center;padding-top:10mm}
   #print .psheet+.psheet{break-before:page;page-break-before:always}
 }
+
+/* essai « bordeaux » : seulement l'écran (classe « bord » sur <html>) ; la fiche PDF (cadre à part) et l'impression (#print) gardent leurs couleurs */
+html.bord{--deep:#521A26;--green:#6B2434;--ink:#2F161C}
+html.bord .card:hover{box-shadow:0 10px 26px rgba(82,26,38,.10)} html.bord .thumbs button.sct span{background:rgba(82,26,38,.82)} html.bord #chatFab{box-shadow:0 10px 28px rgba(82,26,38,.28)}
 </style>
+<script>
+/* essai « bordeaux » (Dylan, 04/11/2026, 17 h 04-17 h 20 ; maquette « Legacy en bordeaux ») : une couche de couleurs À L'ÉCRAN seulement, classe « bord »
+   sur <html>. ?essai=bordeaux l'allume pour l'onglet, ?essai=off l'éteint ; se combine avec ?essai=archives (ou ?essai=archives,bordeaux).
+   Jamais dans un document (fiche, facture, devis, export) : ceux-ci fixent leurs propres couleurs. */
+(()=>{ try{ const q=new URLSearchParams(location.search).getAll("essai").flatMap(v=>v.split(","));
+  if(q.includes("bordeaux")) sessionStorage.setItem("ls-essai-bordeaux","1"); else if(q.includes("off")) sessionStorage.removeItem("ls-essai-bordeaux");
+  if(sessionStorage.getItem("ls-essai-bordeaux")==="1"){ document.documentElement.classList.add("bord"); const m=document.querySelector('meta[name="theme-color"]'); if(m) m.setAttribute("content","#521A26"); }
+}catch(e){} })();
+</script>
+
 </head><body>
 <div id="gate" hidden></div>
 <div id="app" hidden>
@@ -586,8 +603,9 @@ const $=(s,r=document)=>r.querySelector(s);
 const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 /* Essai « Archives » (Dylan, 03/11/2026, maquette v2 « 1 oui, 2 oui ») : TOUT ce qui suit est éteint par défaut, rien ne change pour un client
    tant que Dylan n'a pas fait son essai sur l'iPhone ; allumé seulement par ?essai=archives (gardé pour la session de l'onglet). */
-const ARCH=(()=>{ try{ const q=new URLSearchParams(location.search).get("essai"); if(q==="archives"){ sessionStorage.setItem("ls-essai-archives","1"); return true; }
-  if(q==="off"){ sessionStorage.removeItem("ls-essai-archives"); return false; } return sessionStorage.getItem("ls-essai-archives")==="1"; }catch(e){ return false; } })();
+const ARCH=(()=>{ try{ const q=new URLSearchParams(location.search).getAll("essai").flatMap(v=>v.split(","));   // se combine avec ?essai=bordeaux
+  if(q.includes("archives")){ sessionStorage.setItem("ls-essai-archives","1"); return true; }
+  if(q.includes("off")){ sessionStorage.removeItem("ls-essai-archives"); return false; } return sessionStorage.getItem("ls-essai-archives")==="1"; }catch(e){ return false; } })();
 /* « (b. 1986) » en français : « (né en 1986) » / « (née en 1986) » ; sexe inconnu : l'année seule « (1986) » (on n'invente rien) ; « (b. 1986) » reste en anglais ;
    « (1941–2018) » inchangé (Dylan, 03/11/2026, A1 puis 14 h 36 : « né / née », sinon on croit que c'est l'année de l'œuvre).
    Les artistes de la démo sont fictifs : leur genre est connu ici ; pour une vraie collection, la base ne le connaît pas encore. */
@@ -2425,7 +2443,7 @@ async function start(){
 if("serviceWorker" in navigator && (location.protocol==="https:"||location.hostname==="localhost")) navigator.serviceWorker.register("sw.js").then(()=>navigator.serviceWorker.ready).then(()=>{ const warm=()=>{ if(navigator.serviceWorker.controller) ["lib/pdf.min.js","lib/pdf.worker.min.js"].forEach(u=>fetch(u).catch(()=>{})); }; navigator.serviceWorker.controller?setTimeout(warm,1500):navigator.serviceWorker.addEventListener("controllerchange",()=>setTimeout(warm,1500),{once:true}); }).catch(()=>{});
 start();
 </script>
-<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">v10df12f9</div>
+<div id="buildTag" style="position:fixed;right:10px;bottom:calc(6px + env(safe-area-inset-bottom,0px));font:9px/1 -apple-system,sans-serif;color:rgba(22,36,26,.18);pointer-events:none">veeb224b3</div>
 <script>window.__lsBootOk&&window.__lsBootOk()</script>
 <!--ls-end-->
 </body></html>
